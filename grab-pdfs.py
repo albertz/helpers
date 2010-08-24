@@ -1,14 +1,12 @@
 #!/usr/bin/python
-
-import mechanize, sys
-
-import getopt, sys, io
+import sys
 
 def usage():
         print "usage:", sys.argv[0], "[-d <depth>] <url>"
         exit(1)
 
 try:
+	import getopt
         opts, args = getopt.getopt(sys.argv[1:], "d:")
 except getopt.GetoptError as e:
         print e.msg
@@ -18,6 +16,7 @@ opts = dict(opts)
 depth = 1
 if "-d" in opts: depth = int(opts["-d"])
 
+import mechanize
 b = mechanize.Browser()
 
 def filename_for_url(url):
