@@ -7,7 +7,7 @@
 
 # TODO:
 #  - be able to read JPEG (and maybe others) without PIL
-#  - be able to safe EXIF (most functions should already be in place for that)
+#  - be able to save EXIF (most functions should already be in place for that)
 
 
 # The Python Imaging Library (PIL) is
