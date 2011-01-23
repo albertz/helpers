@@ -394,8 +394,10 @@ class TiffImageFileDirectory:
                 data = ifd[8:8+size]
 
             if len(data) != size:
-                raise IOError, "not enough data"
-
+                #raise IOError, "not enough data"
+                # don't raise an exception, just stop reading
+                break
+				
             self.tagdata[tag] = typ, data
             self.tagtype[tag] = typ
 
@@ -679,13 +681,13 @@ def getexif(im):
 		# this works if im is an image loaded by PIL
 		data = im.info["exif"]
 	except KeyError:
-		return None # it meens there is no Exif entry
+		return {} # it meens there is no Exif entry
 	except:
 		try:
 			# maybe this is the info-dict of an image loaded by PIL
 			data = im["exif"]
 		except KeyError:
-			return None # it meens there is no Exif entry
+			return {} # it meens there is no Exif entry
 		except:
 			# let's asume that im is Exif itself
 			data = im
@@ -694,7 +696,8 @@ def getexif(im):
 		raise Exception("expecting an image, an info-dict or Exif data")
 
 	if data[0:6] != "Exif\x00\x00":
-		return None # no exif-data
+		raise Exception("no exif data: " + repr(data[0:6]))
+		#return None # no exif-data
 
 	import StringIO
 	def fixup(value):
