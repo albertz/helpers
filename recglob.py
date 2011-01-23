@@ -18,5 +18,3 @@ def recglob(filepattern, followlinks=False):
 		else:
 			if fnmatchex.fnmatchex(os.path.basename(f), filepattern):
 				yield f
-			else:
-				print "no match:", f, ",", filepattern
