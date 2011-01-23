@@ -25,8 +25,22 @@
 # ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
+import array, string, sys
+
 II = "II" # little-endian (intel-style)
 MM = "MM" # big-endian (motorola-style)
+
+try:
+    if sys.byteorder == "little":
+        native_prefix = II
+    else:
+        native_prefix = MM
+except AttributeError:
+    if ord(array.array("i",[1]).tostring()[0]):
+        native_prefix = II
+    else:
+        native_prefix = MM
+
 
 DEBUG = False
 
@@ -78,6 +92,128 @@ def ob16(i):
     return chr(i>>8&255) + chr(i&255)
 def ob32(i):
     return chr(i>>24&255) + chr(i>>16&255) + chr(i>>8&255) + chr(i&255)
+
+
+
+# a few tag names, just to make the code below a bit more readable
+IMAGEWIDTH = 256
+IMAGELENGTH = 257
+BITSPERSAMPLE = 258
+COMPRESSION = 259
+PHOTOMETRIC_INTERPRETATION = 262
+FILLORDER = 266
+IMAGEDESCRIPTION = 270
+STRIPOFFSETS = 273
+SAMPLESPERPIXEL = 277
+ROWSPERSTRIP = 278
+STRIPBYTECOUNTS = 279
+X_RESOLUTION = 282
+Y_RESOLUTION = 283
+PLANAR_CONFIGURATION = 284
+RESOLUTION_UNIT = 296
+SOFTWARE = 305
+DATE_TIME = 306
+ARTIST = 315
+PREDICTOR = 317
+COLORMAP = 320
+TILEOFFSETS = 324
+EXTRASAMPLES = 338
+SAMPLEFORMAT = 339
+JPEGTABLES = 347
+COPYRIGHT = 33432
+IPTC_NAA_CHUNK = 33723 # newsphoto properties
+PHOTOSHOP_CHUNK = 34377 # photoshop properties
+ICCPROFILE = 34675
+EXIFIFD = 34665
+XMP = 700
+
+COMPRESSION_INFO = {
+    # Compression => pil compression name
+    1: "raw",
+    2: "tiff_ccitt",
+    3: "group3",
+    4: "group4",
+    5: "tiff_lzw",
+    6: "tiff_jpeg", # obsolete
+    7: "jpeg",
+    32771: "tiff_raw_16", # 16-bit padding
+    32773: "packbits"
+}
+
+OPEN_INFO = {
+    # (ByteOrder, PhotoInterpretation, SampleFormat, FillOrder, BitsPerSample,
+    #  ExtraSamples) => mode, rawmode
+    (II, 0, 1, 1, (1,), ()): ("1", "1;I"),
+    (II, 0, 1, 2, (1,), ()): ("1", "1;IR"),
+    (II, 0, 1, 1, (8,), ()): ("L", "L;I"),
+    (II, 0, 1, 2, (8,), ()): ("L", "L;IR"),
+    (II, 1, 1, 1, (1,), ()): ("1", "1"),
+    (II, 1, 1, 2, (1,), ()): ("1", "1;R"),
+    (II, 1, 1, 1, (8,), ()): ("L", "L"),
+    (II, 1, 1, 1, (8,8), (2,)): ("LA", "LA"),
+    (II, 1, 1, 2, (8,), ()): ("L", "L;R"),
+    (II, 1, 1, 1, (16,), ()): ("I;16", "I;16"),
+    (II, 1, 2, 1, (16,), ()): ("I;16S", "I;16S"),
+    (II, 1, 2, 1, (32,), ()): ("I", "I;32S"),
+    (II, 1, 3, 1, (32,), ()): ("F", "F;32F"),
+    (II, 2, 1, 1, (8,8,8), ()): ("RGB", "RGB"),
+    (II, 2, 1, 2, (8,8,8), ()): ("RGB", "RGB;R"),
+    (II, 2, 1, 1, (8,8,8,8), (0,)): ("RGBX", "RGBX"),
+    (II, 2, 1, 1, (8,8,8,8), (1,)): ("RGBA", "RGBa"),
+    (II, 2, 1, 1, (8,8,8,8), (2,)): ("RGBA", "RGBA"),
+    (II, 2, 1, 1, (8,8,8,8), (999,)): ("RGBA", "RGBA"), # corel draw 10
+    (II, 3, 1, 1, (1,), ()): ("P", "P;1"),
+    (II, 3, 1, 2, (1,), ()): ("P", "P;1R"),
+    (II, 3, 1, 1, (2,), ()): ("P", "P;2"),
+    (II, 3, 1, 2, (2,), ()): ("P", "P;2R"),
+    (II, 3, 1, 1, (4,), ()): ("P", "P;4"),
+    (II, 3, 1, 2, (4,), ()): ("P", "P;4R"),
+    (II, 3, 1, 1, (8,), ()): ("P", "P"),
+    (II, 3, 1, 1, (8,8), (2,)): ("PA", "PA"),
+    (II, 3, 1, 2, (8,), ()): ("P", "P;R"),
+    (II, 5, 1, 1, (8,8,8,8), ()): ("CMYK", "CMYK"),
+    (II, 6, 1, 1, (8,8,8), ()): ("YCbCr", "YCbCr"),
+    (II, 8, 1, 1, (8,8,8), ()): ("LAB", "LAB"),
+
+    (MM, 0, 1, 1, (1,), ()): ("1", "1;I"),
+    (MM, 0, 1, 2, (1,), ()): ("1", "1;IR"),
+    (MM, 0, 1, 1, (8,), ()): ("L", "L;I"),
+    (MM, 0, 1, 2, (8,), ()): ("L", "L;IR"),
+    (MM, 1, 1, 1, (1,), ()): ("1", "1"),
+    (MM, 1, 1, 2, (1,), ()): ("1", "1;R"),
+    (MM, 1, 1, 1, (8,), ()): ("L", "L"),
+    (MM, 1, 1, 1, (8,8), (2,)): ("LA", "LA"),
+    (MM, 1, 1, 2, (8,), ()): ("L", "L;R"),
+    (MM, 1, 1, 1, (16,), ()): ("I;16B", "I;16B"),
+    (MM, 1, 2, 1, (16,), ()): ("I;16BS", "I;16BS"),
+    (MM, 1, 2, 1, (32,), ()): ("I;32BS", "I;32BS"),
+    (MM, 1, 3, 1, (32,), ()): ("F;32BF", "F;32BF"),
+    (MM, 2, 1, 1, (8,8,8), ()): ("RGB", "RGB"),
+    (MM, 2, 1, 2, (8,8,8), ()): ("RGB", "RGB;R"),
+    (MM, 2, 1, 1, (8,8,8,8), (0,)): ("RGBX", "RGBX"),
+    (MM, 2, 1, 1, (8,8,8,8), (1,)): ("RGBA", "RGBa"),
+    (MM, 2, 1, 1, (8,8,8,8), (2,)): ("RGBA", "RGBA"),
+    (MM, 2, 1, 1, (8,8,8,8), (999,)): ("RGBA", "RGBA"), # corel draw 10
+    (MM, 3, 1, 1, (1,), ()): ("P", "P;1"),
+    (MM, 3, 1, 2, (1,), ()): ("P", "P;1R"),
+    (MM, 3, 1, 1, (2,), ()): ("P", "P;2"),
+    (MM, 3, 1, 2, (2,), ()): ("P", "P;2R"),
+    (MM, 3, 1, 1, (4,), ()): ("P", "P;4"),
+    (MM, 3, 1, 2, (4,), ()): ("P", "P;4R"),
+    (MM, 3, 1, 1, (8,), ()): ("P", "P"),
+    (MM, 3, 1, 1, (8,8), (2,)): ("PA", "PA"),
+    (MM, 3, 1, 2, (8,), ()): ("P", "P;R"),
+    (MM, 5, 1, 1, (8,8,8,8), ()): ("CMYK", "CMYK"),
+    (MM, 6, 1, 1, (8,8,8), ()): ("YCbCr", "YCbCr"),
+    (MM, 8, 1, 1, (8,8,8), ()): ("LAB", "LAB"),
+
+}
+
+PREFIXES = ["MM\000\052", "II\052\000", "II\xBC\000"]
+
+def _accept(prefix):
+    return prefix[:4] in PREFIXES
+
 
 
 ##
