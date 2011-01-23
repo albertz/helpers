@@ -5,6 +5,11 @@
 # Advantage over PIL: It also reads broken EXIF.
 # by Albert Zeyer
 
+# TODO:
+#  - be able to read JPEG (and maybe others) without PIL
+#  - be able to safe EXIF (most functions should already be in place for that)
+
+
 # The Python Imaging Library (PIL) is
 #
 #    Copyright © 1997-2011 by Secret Labs AB
