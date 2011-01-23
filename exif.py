@@ -2,6 +2,7 @@
 
 # simple exif reader
 # code based on Python Imaging Library
+# Advantage over PIL: It also reads broken EXIF.
 # by Albert Zeyer
 
 # The Python Imaging Library (PIL) is
@@ -743,9 +744,6 @@ def getexif(im):
 			
 	ret = {}
 	for tag, value in exif.iteritems():
-		try:
-			decoded = TAGS.get(tag, tag)
-			ret[decoded] = value
-		except:
-			pass
+		decoded = TAGS.get(tag, tag)
+		ret[decoded] = value
 	return ret
