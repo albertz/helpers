@@ -17,20 +17,7 @@ if not os.path.isdir(dir):
 	usage()
 	quit()
 
-from PIL import Image
-from PIL.ExifTags import TAGS
-
-def get_exif(fn):
-    ret = {}
-    i = Image.open(fn)
-    info = i._getexif()
-    for tag, value in info.iteritems():
-		try:
-			decoded = TAGS.get(tag, tag)
-			ret[decoded] = value
-		except:
-			pass
-    return ret
+import exif
 
 def cleanup_exif_tags(exif):
 	ret = {}
@@ -41,14 +28,20 @@ def cleanup_exif_tags(exif):
 			value = cleanupstr(value).strip()
 		ret[tag] = value
 	return ret
+
+def iminfo(f):
+	return cleanup_exif_tags(exif.getexif(f))
 	
 allexif = {}
-for f in recglob(dir + "/*.{jpeg,jpg,JPG}"): #recglob(dir + "/*.{jpg,jpeg}"):
+for f in recglob(dir + "/*.{jpeg,jpg,JPG}"):
 	print f, ":",
 	try:
-		exif = cleanup_exif_tags(get_exif(f))
-		print exif["DateTime"]
-		allexif.update(exif)
+		info = iminfo(f)
+		if "DateTime" in info:
+			print info["DateTime"]
+		else:
+			print "incomplete EXIF"
+		allexif.update(info)
 	except Exception, e:
 		print e
 
