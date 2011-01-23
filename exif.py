@@ -28,6 +28,35 @@
 II = "II" # little-endian (intel-style)
 MM = "MM" # big-endian (motorola-style)
 
+DEBUG = False
+
+
+SAFEBLOCK = 1024*1024
+
+##
+# Reads large blocks in a safe way.  Unlike fp.read(n), this function
+# doesn't trust the user.  If the requested size is larger than
+# SAFEBLOCK, the file is read block by block.
+#
+# @param fp File handle.  Must implement a <b>read</b> method.
+# @param size Number of bytes to read.
+# @return A string containing up to <i>size</i> bytes of data.
+
+def _safe_read(fp, size):
+    if size <= 0:
+        return ""
+    if size <= SAFEBLOCK:
+        return fp.read(size)
+    data = []
+    while size > 0:
+        block = fp.read(min(size, SAFEBLOCK))
+        if not block:
+            break
+        data.append(block)
+        size = size - len(block)
+    return string.join(data, "")
+
+
 #
 # --------------------------------------------------------------------
 # Read TIFF files
@@ -201,7 +230,7 @@ class TiffImageFileDirectory:
 
             tag, typ = i16(ifd), i16(ifd, 2)
 
-            if Image.DEBUG:
+            if DEBUG:
                 import TiffTags
                 tagname = TiffTags.TAGS.get(tag, "unknown")
                 typname = TiffTags.TYPES.get(typ, "unknown")
@@ -211,7 +240,7 @@ class TiffImageFileDirectory:
             try:
                 dispatch = self.load_dispatch[typ]
             except KeyError:
-                if Image.DEBUG:
+                if DEBUG:
                     print "- unsupported type", typ
                 continue # ignore unsupported type
 
@@ -223,7 +252,7 @@ class TiffImageFileDirectory:
             if size > 4:
                 here = fp.tell()
                 fp.seek(i32(ifd, 8))
-                data = ImageFile._safe_read(fp, size)
+                data = _safe_read(fp, size)
                 fp.seek(here)
             else:
                 data = ifd[8:8+size]
@@ -234,7 +263,7 @@ class TiffImageFileDirectory:
             self.tagdata[tag] = typ, data
             self.tagtype[tag] = typ
 
-            if Image.DEBUG:
+            if DEBUG:
                 if tag in (COLORMAP, IPTC_NAA_CHUNK, PHOTOSHOP_CHUNK, ICCPROFILE, XMP):
                     print "- value: <table: %d bytes>" % size
                 else:
@@ -298,7 +327,7 @@ class TiffImageFileDirectory:
                 else:
                     data = string.join(map(o32, value), "")
 
-            if Image.DEBUG:
+            if DEBUG:
                 import TiffTags
                 tagname = TiffTags.TAGS.get(tag, "unknown")
                 typname = TiffTags.TYPES.get(typ, "unknown")
@@ -333,7 +362,7 @@ class TiffImageFileDirectory:
 
         # pass 2: write directory to file
         for tag, typ, count, value, data in directory:
-            if Image.DEBUG > 1:
+            if DEBUG > 1:
                 print tag, typ, count, repr(value), repr(data)
             fp.write(o16(tag) + o16(typ) + o32(count) + value)
 
