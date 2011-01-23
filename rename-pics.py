@@ -1,5 +1,13 @@
 #!/usr/bin/python
 
+# Simple pic/mov renamer script.
+# by Albert Zeyer
+# code under zlib
+
+# Adds a date (eg. "2011_01_22__") as a prefix to each file.
+# Asks for confirmation, so it is safe to just try out and see what it would do.
+
+
 from glob import *
 from recglob import *
 from cleanupstr import *
