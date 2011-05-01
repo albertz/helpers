@@ -1,4 +1,4 @@
 #!/usr/bin/python
 
 import sys
-eval(sys.argv[1])
+exec(sys.argv[1])
