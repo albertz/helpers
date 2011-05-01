@@ -1,4 +1,4 @@
 #!/usr/bin/python
 
 import sys
-exec(sys.argv[1])
+exec("\n".join(sys.argv[1:]))
