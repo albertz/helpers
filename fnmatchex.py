@@ -2,6 +2,10 @@
 # by Albert Zeyer
 # code under zlib
 
+# examples:
+#   *.[mM][pP]3  # [] just as in regexp. * and ? as usual
+#   *.{jpg,jpeg} # {} gives multiple alternatives
+
 import re
 
 def fnpattern_to_re(pattern):
