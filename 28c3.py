@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import requests
 from BeautifulSoup import BeautifulSoup
 from time import sleep
@@ -63,15 +65,12 @@ while True:
                          headers = {
                             "Referer": sign_in.url,
                          },
+                         allow_redirects = True
                          #return_response=False
                          )
         #account.send()
         #print account, account._enc_data, account.headers
         #account = account.response
-        if account.status_code == 302:
-            s.cookies.update(account.cookies)
-            print "redirect..."
-            account = s.get("https://presale.events.ccc.de/order/")
         print account
         if account.ok:
             open("last_login.html", "w").write(account.content.encode("utf8"))
@@ -81,7 +80,7 @@ while True:
             else:
                 print "Could not login!"
                 os._exit(1)
-                sleep(0.5)
+                sleep(1)
         print account
     except KeyboardInterrupt:
         quit()
@@ -103,10 +102,7 @@ while not ordered:
     print "Ordering ...", link
     while True:
         try:
-            page = s.post(link, data=post)
-            if page.status_code == 302:
-                print "redirect..."
-                page = s.get("https://presale.events.ccc.de/order/")
+            page = s.post(link, data=post, allow_redirects=True)
             print page
             if page.ok: break
         except KeyboardInterrupt:
