@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# For now, this commit in Py-requests is needed but not yet upstream:
+# https://github.com/albertz/requests/commit/d8f0d0530cfd90ad82ee8e4ed1b8b6a8a0a125e0
+
 import requests
 from BeautifulSoup import BeautifulSoup
 from time import sleep
