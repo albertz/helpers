@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+# code by Albert Zeyer, 2012-06-04
+# code under zlib licence
+# more: https://github.com/albertz/helpers
+
 import sys, os
 files = sys.argv[1:]
 debug = False
