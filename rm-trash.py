@@ -42,6 +42,6 @@ for f in files:
 	if debug:
 		print "rm", repr(f), "->", res, repr(trashfn.value) if trashfn else "NULL"
 	if res != 0:
-		print "error", res, "on file", repr(f)
+		print >>sys.stderr, "error", res, "on file", repr(f)
 		sys.exit(1)
 	
