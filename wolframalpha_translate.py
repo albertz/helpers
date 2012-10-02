@@ -65,6 +65,12 @@ def parse(s, out):
 		
 		subOut(c)
 
+	# make all int numbers double (mostly wanted in C)
+	for i in range(len(parts)):
+		try: int(parts[i])
+		except: pass
+		else: parts[i] += "."
+
 	# now fix ^ op to pow
 	while "^" in parts:
 		i = parts.index("^")
