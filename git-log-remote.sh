@@ -5,7 +5,7 @@
 tmpdir=`mktemp -d /tmp/git-tmp.XXXXXX` || exit 1
 echo "temp dir: $tmpdir"
 
-pushd "$tmpdir"
+pushd "$tmpdir" || exit 1
 git clone --depth=1 -n "$1" .
 git log
 popd
