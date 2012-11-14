@@ -4,6 +4,7 @@
 
 import os, glob, fnmatchex
 
+# usage: filepattern = dir + "/" + pattern
 # filepattern: fnmatchex expr only supported for the basename yet
 # this function iterates: dir + "/**/" + pattern
 def recglob(filepattern, followlinks=False):
