@@ -4,7 +4,7 @@ import better_exchook
 better_exchook.install()
 from itertools import *
 from pprint import pprint
-import os, sys
+import os, sys, time
 
 
 LastFmUser = "www_az2000_de"
@@ -70,10 +70,14 @@ def formatDate(t):
 # play-event dict: artist, title
 loadLog()
 
-for page in count(1):
+page = 1
+while True:
 	ret = get(page=page)
 	if "error" in ret:
 		pprint(ret)
+		if int(ret["error"]) == 29: # Rate limit exceeded
+			time.sleep(10) # wait a bit
+			continue
 		sys.exit(1)
 		
 	for retTrack in ret["recenttracks"]["track"]:
@@ -88,7 +92,7 @@ for page in count(1):
 		pprint(track)
 	saveLog()
 	
-
+	page += 1
 
 
 
