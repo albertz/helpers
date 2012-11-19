@@ -8,9 +8,11 @@ import os, sys, time, types
 
 
 LastFmUser = "www_az2000_de"
+StopOnOldEntry = True
+PageLimit = 50
+
 # This key is from the web example...
 LastFmApiKey = "29d301e504af323d6246d9c652c227fa"
-PageLimit = 200
 
 # http://www.last.fm/api/show/user.getRecentTracks
 
@@ -70,7 +72,6 @@ def formatDate(t):
 # play-event dict: artist, title
 loadLog()
 
-newSongs = set() # timestamps
 
 page = 1
 while True:
@@ -86,7 +87,11 @@ while True:
 		if "date" not in retTrack: continue # probably nowplaying
 		timestamp = long(retTrack["date"]["uts"])
 		print "page:", page, ", date:", formatDate(timestamp)
-		newSongs.add(timestamp)
+		if StopOnOldEntry and timestamp in log:
+			print "This is an old entry:", log[timestamp]
+			pprint(retTrack)
+			saveLog()
+			sys.exit()
 		track = log.setdefault(timestamp, {})
 		track["artist"] = retTrack["artist"]["#text"]
 		track["artist.mbid"] = retTrack["artist"]["mbid"]
