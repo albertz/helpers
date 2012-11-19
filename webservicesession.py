@@ -25,7 +25,7 @@ except ImportError:
 	# fall back for Python 2.5
 	from cgi import parse_qs
 
-from . import rest
+import rest
 
 class OAuthToken(object):
 	__slots__ = ('key', 'secret')
@@ -90,7 +90,6 @@ class WebServiceSession(object):
 		params = params.copy()
 				
 		prefix = "/"
-		if withVersion: prefix += self.API_VERSION		
 		if params:
 			return prefix + target_path + "?" + urllib.urlencode(params)
 		else:
@@ -109,7 +108,7 @@ class WebServiceSession(object):
 		Returns:
 			The full API URL.
 		"""
-		return "https://%s%s" % (host, self.build_path(target, params))
+		return "%s%s" % (host, self.build_path(target, params))
 
 	def build_authorize_url(self, request_token, oauth_callback=None):
 		"""Build a request token authorization URL.

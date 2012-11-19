@@ -18,7 +18,7 @@ try:
 except ImportError:
 	import simplejson as json
 
-from .rest import ErrorResponse, RESTClient
+from rest import ErrorResponse, RESTClient
 
 def format_path(path):
 	"""Normalize path for use with the Lastfm API.
@@ -55,17 +55,25 @@ class WebServiceClient(object):
 	point indicates that the user needs to be reauthenticated.
 	"""
 
-	def __init__(self, session, rest_client=RESTClient):
+	def __init__(self, session=None, api_host=None, rest_client=RESTClient):
 		"""Initialize the WebServiceClient object.
 
 		Args:
 			session: A webservicesession.WebServiceSession object to use for making requests. [optional]
 			rest_client: A rest.RESTClient-like object to use for making requests. [optional]
 		"""
-		self.session = session
+		if session is not None:
+			assert api_host is None, "we already have the session which should know about the api_host"
+			self.session = session
+		else:
+			assert api_host
+			import webservicesession
+			self.session = webservicesession.WebServiceSession(
+				consumer_key=None, consumer_secret=None)
+			self.session.API_HOST = api_host
 		self.rest_client = rest_client
 
-	def request(self, target, params=None, method='POST'):
+	def genRequestObj(self, target, params=None, method='POST', withAccessHeaders=False):
 		"""Make an HTTP request to a target API method.
 
 		This is an internal method used to properly craft the url, headers, and
@@ -84,13 +92,16 @@ class WebServiceClient(object):
 			A tuple of (url, params, headers) that should be used to make the request.
 			OAuth authentication information will be added as needed within these fields.
 		"""
-		assert method in ['GET','POST', 'PUT'], "Only 'GET', 'POST', and 'PUT' are allowed."
+		assert method in ['GET','POST','PUT'], "Only 'GET', 'POST', and 'PUT' are allowed."
 		if params is None:
 			params = {}
 
 		host = self.session.API_HOST
 		base = self.session.build_url(host, target)
-		headers, params = self.session.build_access_headers(params=params)
+		if withAccessHeaders:
+			headers, params = self.session.build_access_headers(params=params)
+		else:
+			headers = {}
 
 		if method in ('GET', 'PUT'):
 			url = self.session.build_url(host, target, params)
@@ -116,10 +127,17 @@ class WebServiceClient(object):
 		}
 		if duration:
 			params["duration"] = str(int(duration))
-		url, params, headers = self.request("/", method='POST', params=params)
+		url, params, headers = self.genRequestObj("/", method='POST', params=params)
 
 		ret = self.rest_client.POST(url, headers=headers, params=params)
 		#assert "error" not in ret
 		return ret
 	"""
 	
+	def request(self, params, withAccessHeaders=False):
+		url, params, headers = self.genRequestObj(
+			"/", method='GET', params=params, withAccessHeaders=withAccessHeaders)
+		ret = self.rest_client.GET(url, headers=headers)
+		return ret
+		
+		
