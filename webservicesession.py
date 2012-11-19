@@ -1,14 +1,17 @@
 # code under public domain
 
 """
-lastfm.session.LastfmSession is responsible for holding OAuth authentication info
-(app key/secret, request key/secret,  access key/secret) as well as configuration information for your app
-('app_folder' or 'lastfm' access type, optional locale preference). It knows how to
-use all of this information to craft properly constructed requests to Lastfm.
+WebServiceSession is responsible for holding OAuth authentication info
+(app key/secret, request key/secret,  access key/secret) as well as configuration information for your app.
+It knows how to use all of this information to craft properly constructed requests to Lastfm.
 
-A LastfmSession object must be passed to a lastfm.client.LastfmClient object upon
+A WebServiceSession object can be passed to a webserviceclient.WebServiceClient object upon
 initialization.
 """
+
+# Historically, this comes from Last.fm and was used for the Last.fm
+# client module but it is generic to be used for whatever.
+
 from __future__ import absolute_import
 
 import random
@@ -30,10 +33,6 @@ class OAuthToken(object):
 		self.key = key
 		self.secret = secret
 
-# see http://www.last.fm/api/authentication
-# see http://www.last.fm/api/desktopauth
-# see http://www.last.fm/api/webauth
-
 def build_api_sig(kwargs, api_secret):
 	# kwargs e.g. contains api_key, method, token
 	s = "".join([key + kwargs[key] for key in sorted(kwargs.keys())])
@@ -41,18 +40,9 @@ def build_api_sig(kwargs, api_secret):
 	from hashlib import md5
 	return md5(s).hexdigest()
 
-class LastfmSession(object):
-	API_VERSION = "2.0"
-
-	API_HOST = "ws.audioscrobbler.com"
-	WEB_HOST = "www.last.fm"
+class WebServiceSession(object):
 
 	def __init__(self, consumer_key, consumer_secret, rest_client=rest.RESTClient):
-		"""Initialize a LastfmSession object.
-
-		Your consumer key and secret are available
-		at http://www.last.fm/api/
-		"""
 		self.consumer_creds = OAuthToken(consumer_key, consumer_secret)
 		self.token = None
 		self.request_token = None

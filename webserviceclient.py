@@ -5,6 +5,10 @@ The main client API you'll be working with most often.  You'll need to
 configure a lastfm.session.LastfmSession for this to work, but otherwise
 it's fairly self-explanatory.
 """
+
+# Historically, this comes from Last.fm and was used for the Last.fm
+# client module but it is generic to be used for whatever.
+
 from __future__ import absolute_import
 
 import re
@@ -35,11 +39,13 @@ def format_path(path):
 
 # see http://www.last.fm/api/scrobbling
 
-class LastfmClient(object):
+class WebServiceClient(object):
 	"""
-	The main access point of doing REST calls on Lastfm. You should
-	first create and configure a lastfm.session.LastfmSession object,
-	and then pass it into LastfmClient's constructor. LastfmClient
+	The main access point of doing REST calls.
+	
+	If it needs a session, you should first create and configure a
+	webservicesession.WebServiceSession object,
+	and then pass it into WebServiceClient's constructor. WebServiceClient
 	then does all the work of properly calling each API method
 	with the correct OAuth authentication.
 
@@ -50,11 +56,11 @@ class LastfmClient(object):
 	"""
 
 	def __init__(self, session, rest_client=RESTClient):
-		"""Initialize the LastfmClient object.
+		"""Initialize the WebServiceClient object.
 
 		Args:
-			session: A lastfm.session.LastfmSession object to use for making requests.
-			rest_client: A lastfm.rest.RESTClient-like object to use for making requests. [optional]
+			session: A webservicesession.WebServiceSession object to use for making requests. [optional]
+			rest_client: A rest.RESTClient-like object to use for making requests. [optional]
 		"""
 		self.session = session
 		self.rest_client = rest_client
@@ -63,7 +69,7 @@ class LastfmClient(object):
 		"""Make an HTTP request to a target API method.
 
 		This is an internal method used to properly craft the url, headers, and
-		params for a Lastfm API request.  It is exposed for you in case you
+		params for a API request.  It is exposed for you in case you
 		need craft other API calls not in this library or if you want to debug it.
 
 		Args:
@@ -93,22 +99,8 @@ class LastfmClient(object):
 
 		return url, params, headers
 
-	# http://www.last.fm/api/show/track.updateNowPlaying
-	def updateNowPlaying(self, artist, track, duration=None):
-		params = {
-			"method": "track.updateNowPlaying",
-			"artist": artist,
-			"track": track,
-		}
-		if duration and duration > 0:
-			params["duration"] = str(int(duration))
-		url, params, headers = self.request("/", method='POST', params=params)
-
-		ret = self.rest_client.POST(url, headers=headers, params=params)
-		#assert "error" not in ret
-		return ret
-        
-	# http://www.last.fm/api/show/track.scrobble
+	# usage example to <http://www.last.fm/api/show/track.scrobble>
+	UsageExample = """
 	def scrobble(self, artist, track, duration=None, timestamp=None):
 		if not timestamp:
 			import time
@@ -129,3 +121,5 @@ class LastfmClient(object):
 		ret = self.rest_client.POST(url, headers=headers, params=params)
 		#assert "error" not in ret
 		return ret
+	"""
+	

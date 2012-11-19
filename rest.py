@@ -1,9 +1,11 @@
 # code under public domain
 
 """
-A simple JSON REST request abstraction layer that is used by the
-lastfm.client and lastfm.session modules. You shouldn't need to use this.
+simple JSON REST request abstraction layer
 """
+
+# Historically, this comes from Last.fm and was used for the Last.fm
+# client module but it is generic to be used for whatever.
 
 import httplib
 import os
