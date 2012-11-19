@@ -86,10 +86,6 @@ while True:
 		if "date" not in retTrack: continue # probably nowplaying
 		timestamp = long(retTrack["date"]["uts"])
 		print "page:", page, ", date:", formatDate(timestamp)
-		if timestamp in newSongs:
-			pprint(retTrack)
-			print "this is a repeat, exiting"
-			sys.exit()
 		newSongs.add(timestamp)
 		track = log.setdefault(timestamp, {})
 		track["artist"] = retTrack["artist"]["#text"]
