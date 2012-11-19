@@ -4,7 +4,7 @@ import better_exchook
 better_exchook.install()
 from itertools import *
 from pprint import pprint
-import os, sys, time
+import os, sys, time, types
 
 
 LastFmUser = "www_az2000_de"
@@ -57,18 +57,20 @@ def betterRepr(o):
 	
 def saveLog():
 	global log, LogFile
+	s = betterRepr(log) + "\n"
 	f = open(LogFile, "w")
-	f.write(betterRepr(log))
-	f.write("\n")
+	f.write(s)
 
 def formatDate(t):
-	# if you used an old script which didn't saved the UTC stamp, use this script:
-	# https://github.com/albertz/memos/blob/7a19a7cc4a3fcb2f1daebbc45e2da896032704a2/twitter-fixdates.py
+	if isinstance(t, (types.IntType,types.LongType,types.FloatType)):
+		t = time.gmtime(t)
 	return time.strftime("%Y-%m-%d %H:%M:%S +0000", t)
 	
 # log is dict: timestamp -> dict for play-event
 # play-event dict: artist, title
 loadLog()
+
+newSongs = set() # timestamps
 
 page = 1
 while True:
@@ -79,10 +81,16 @@ while True:
 			time.sleep(10) # wait a bit
 			continue
 		sys.exit(1)
-		
+	
 	for retTrack in ret["recenttracks"]["track"]:
 		if "date" not in retTrack: continue # probably nowplaying
 		timestamp = long(retTrack["date"]["uts"])
+		print "page:", page, ", date:", formatDate(timestamp)
+		if timestamp in newSongs:
+			pprint(retTrack)
+			print "this is a repeat, exiting"
+			sys.exit()
+		newSongs.add(timestamp)
 		track = log.setdefault(timestamp, {})
 		track["artist"] = retTrack["artist"]["#text"]
 		track["artist.mbid"] = retTrack["artist"]["mbid"]
