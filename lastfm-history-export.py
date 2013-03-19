@@ -40,7 +40,7 @@ def loadLog():
 		assert isinstance(log, dict)
 	except IOError: # e.g. file-not-found. that's ok
 		log = {}
-	except:
+	except Exception:
 		print "logfile reading error"
 		sys.excepthook(*sys.exc_info())
 		log = {}
@@ -92,13 +92,14 @@ while True:
 			pprint(retTrack)
 			saveLog()
 			sys.exit()
-		track = log.setdefault(timestamp, {})
+		track = {}
 		track["artist"] = retTrack["artist"]["#text"]
 		track["artist.mbid"] = retTrack["artist"]["mbid"]
 		track["title"] = retTrack["name"]
 		track["mbid"] = retTrack["mbid"]
 		track["timestamp"] = timestamp
-		pprint(track)
+		log.setdefault(timestamp, {}).update(track)
+		pprint(log[timestamp])
 	saveLog()
 	
 	page += 1
