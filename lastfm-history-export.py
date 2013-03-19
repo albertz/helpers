@@ -8,7 +8,7 @@ import os, sys, time, types
 
 
 LastFmUser = "www_az2000_de"
-StopOnOldEntry = True
+StopOnOldEntryLimit = 40
 PageLimit = 50
 
 # This key is from the web example...
@@ -74,6 +74,7 @@ loadLog()
 
 
 page = 1
+oldEntryCount = 0
 while True:
 	ret = get(page=page)
 	if "error" in ret:
@@ -87,11 +88,13 @@ while True:
 		if "date" not in retTrack: continue # probably nowplaying
 		timestamp = long(retTrack["date"]["uts"])
 		print "page:", page, ", date:", formatDate(timestamp)
-		if StopOnOldEntry and timestamp in log:
-			print "This is an old entry:", log[timestamp]
-			pprint(retTrack)
-			saveLog()
-			sys.exit()
+		if timestamp in log:
+			print "This is an old entry:", log[timestamp]["artist"], "-", log[timestamp]["title"]
+			oldEntryCount += 1
+		elif oldEntryCount > 0:
+			print "New entry after old entry."
+			# balance out
+			oldEntryCount -= 1
 		track = {}
 		track["artist"] = retTrack["artist"]["#text"]
 		track["artist.mbid"] = retTrack["artist"]["mbid"]
@@ -101,6 +104,10 @@ while True:
 		log.setdefault(timestamp, {}).update(track)
 		pprint(log[timestamp])
 	saveLog()
+
+	if oldEntryCount >= StopOnOldEntryLimit:
+		print "StopOnOldEntryLimit limit (%i) reached by %i" % (StopOnOldEntryLimit, oldEntryCount)
+		sys.exit()
 	
 	page += 1
 
