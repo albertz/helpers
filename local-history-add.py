@@ -2,12 +2,16 @@
 
 import os, sys
 
+def get_login_user():
+	import pwd, os
+	return pwd.getpwuid(os.getuid())[0]
+
 def utc_datetime_str():
 	from datetime import datetime
 	return datetime.utcnow().strftime("%Y-%m-%d.%H-%M-%S")
 
 def get_history_filename():
-	return os.getcwd() + "/.history." + os.getlogin()
+	return os.getcwd() + "/.history." + get_login_user()
 
 def is_good_entry(entry):
 	entry = entry.strip()
