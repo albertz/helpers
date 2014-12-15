@@ -32,6 +32,7 @@ class RssChecker(object):
 		if value > self.max_value:
 			self.max_value = value
 			print("New maximum RSS usage: %s" % byteNumRepr(value))
+			time.sleep(10) # sleep a bit longer
 
 def main():
 	# cgroups path to memory statistic file
