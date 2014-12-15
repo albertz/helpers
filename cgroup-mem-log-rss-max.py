@@ -25,7 +25,7 @@ class RssChecker(object):
 	def get_rss(self):
 		stats = open(self.stat_file).read().splitlines()
 		stats = dict([(key,int(value)) for key,value in map(str.split, stats)])
-		return stats["rss"]
+		return stats["total_rss"]
 
 	def update(self):
 		value = self.get_rss()
@@ -41,6 +41,7 @@ def main():
 	while os.getppid() > 1: # run while parent process exists
 		checker.update()
 		time.sleep(1)
-
+	print("Final usage: %s" % byteNumRepr(checker.get_rss()))
+	
 if __name__ == '__main__':
 	main()
