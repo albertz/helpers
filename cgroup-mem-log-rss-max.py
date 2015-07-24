@@ -35,6 +35,9 @@ class RssChecker(object):
 			time.sleep(10) # sleep a bit longer
 
 def main():
+	# Force disable stdout buffering.
+	sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)
+
 	# cgroups path to memory statistic file
 	stat_file = '/sys/fs/cgroup/memory/memory.stat'
 
