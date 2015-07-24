@@ -29,6 +29,8 @@ class RssChecker(object):
 
 	def update(self):
 		value = self.get_rss()
+		if byteNumRepr(value) == byteNumRepr(self.max_value):  # might be equal because of precision
+			return
 		if value > self.max_value:
 			self.max_value = value
 			print("New maximum RSS usage: %s" % byteNumRepr(value))
