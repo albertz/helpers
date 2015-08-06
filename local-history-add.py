@@ -35,4 +35,6 @@ if __name__ == "__main__":
 		maybe_add_entry(" ".join(sys.argv[1:]))
 	except IOError as e:
 		# Permission denied or so.
-		print(e)
+		#print(e)
+		pass
+
