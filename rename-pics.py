@@ -13,7 +13,9 @@ from recglob import *
 from cleanupstr import *
 import sys, os
 
-def usage(): print "usage:", sys.argv[0], "<dir>"
+def usage():
+	print "usage:", sys.argv[0], "<dir>"
+	print "Asks for confirmation before it does any action."
 	
 if len(sys.argv) != 2:
 	usage()
