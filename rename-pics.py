@@ -44,14 +44,14 @@ def file_time_creation(f):
 	stats = os.stat(f)
 	try:
 		t = stats.st_birthtime
-	except:
+	except Exception:
 		t = stats.st_ctime
 	return time.strftime("%Y:%m:%d %H:%M:%S",time.localtime(t))
 	
 def iminfo(f):
 	try:
 		info = cleanup_exif_tags(exif.getexif(f))
-	except:
+	except Exception:
 		info = {}
 	if not "DateTime" in info:
 		info["DateTime"] = file_time_creation(f)
