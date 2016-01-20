@@ -2,3 +2,5 @@
 *.html
 *~
 .history*
+.idea
+
