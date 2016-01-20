@@ -68,7 +68,6 @@ def get_prefix_for_file(f, args):
 	if args.add_time:
 		date_time_plen += 9  # e.g. "_12_30_00"
 	prefix = date_time_str[:date_time_plen]
-	prefix += "__"
 	return prefix
 
 def user_repr(v):
@@ -96,6 +95,9 @@ def collect_file(f, args):
 	try:
 		assert os.path.isfile(f), "is not a file: %s" % f
 		prefix = get_prefix_for_file(f, args)
+		if args.add_prefix:
+			prefix += "_" + args.add_prefix
+		prefix += "__"
 		newfn = os.path.dirname(f) + "/" + prefix + os.path.basename(f)
 		if os.path.exists(newfn):
 			errors[f] = os.path.basename(newfn) + " already exists"
@@ -167,6 +169,9 @@ def main():
 	argparser.add_argument(
 		'--add_time', action="store_true",
 		help="add time to filename")
+	argparser.add_argument(
+		'--add_prefix', type=str,
+		help="additional prefix to add")
 	argparser.add_argument(
 		'--show_exif_only', action="store_true",
 		help="show EXIF only and don't do anything")
