@@ -12,6 +12,8 @@ from glob import *
 from recglob import *
 from cleanupstr import *
 import sys, os
+import better_exchook
+better_exchook.install()
 
 def usage():
 	print "usage:", sys.argv[0], "<dir>"
