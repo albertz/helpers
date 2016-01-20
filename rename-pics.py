@@ -4,14 +4,12 @@
 # by Albert Zeyer
 # code under zlib
 
-# Adds a date (eg. "2011_01_22__") as a prefix to each file.
-# Asks for confirmation, so it is safe to just try out and see what it would do.
-
 
 import argparse
 from glob import *
 from recglob import *
 from cleanupstr import *
+from pprint import pprint
 import exif
 import sys, os
 import better_exchook
@@ -73,7 +71,27 @@ def get_prefix_for_file(f, args):
 	prefix += "__"
 	return prefix
 
+def user_repr(v):
+	if isinstance(v, str):
+		if len(v) > 30: return repr(v[:30]) + "..."
+		return repr(v)
+	return repr(v)
+
+def dump_exif(f):
+	print "File", f, ":"
+	try:
+		info = exif.getexif(f)
+	except exif.ExifException, e:
+		print "  Error:", e
+	else:
+		for k, v in sorted(info.items()):
+			print " ", k, ":", user_repr(v)
+	print "  file creation time:", file_time_creation(f)
+
 def collect_file(f, args):
+	if args.show_exif_only:
+		dump_exif(f)
+		return
 	global files, errors
 	try:
 		assert os.path.isfile(f), "is not a file: %s" % f
@@ -85,7 +103,7 @@ def collect_file(f, args):
 			errors[f] = os.path.basename(f) + " already has the prefix '" + prefix + "'"
 		else:
 			files[f] = newfn
-	except Exception, e:
+	except exif.ExifException, e:
 		errors[f] = str(e)
 
 
@@ -137,8 +155,11 @@ def user_loop(args):
 
 def main():
 	argparser = argparse.ArgumentParser(
-		description="Renames pictures according to a pattern via EXIF.",
-		epilog="Asks for confirmation before it does any action."
+		description="""
+		Renames pictures according to a pattern via EXIF.
+		Adds a date (eg. "2011_01_22__") as a prefix to each file.
+		Asks for confirmation, so it is safe to just try out and see what it would do.
+		"""
 	)
 	argparser.add_argument(
 		'dirs_or_files', nargs="+",
@@ -146,6 +167,9 @@ def main():
 	argparser.add_argument(
 		'--add_time', action="store_true",
 		help="add time to filename")
+	argparser.add_argument(
+		'--show_exif_only', action="store_true",
+		help="show EXIF only and don't do anything")
 	argparser.add_argument(
 		'--no_action', action="store_true",
 		help="just try, don't do anything")
