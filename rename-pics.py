@@ -97,8 +97,7 @@ def collect_file(f, args):
 		prefix = get_prefix_for_file(f, args)
 		if args.add_prefix:
 			prefix += "_" + args.add_prefix
-		prefix += "__"
-		newfn = os.path.dirname(f) + "/" + prefix + os.path.basename(f)
+		newfn = os.path.dirname(f) + "/" + prefix + "__" + os.path.basename(f)
 		if os.path.exists(newfn):
 			errors[f] = os.path.basename(newfn) + " already exists"
 		elif os.path.basename(f)[0:len(prefix)] == prefix:
@@ -132,7 +131,7 @@ def user_loop(args):
 
 		if len(errors) > 0:
 			print "Errors (i.e. excluded files):"
-			for f, err in errors.iteritems():
+			for f, err in sorted(errors.items()):
 				print "", f, ":", err
 			print ""
 
