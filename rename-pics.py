@@ -94,14 +94,16 @@ def collect_file(f, args):
 	global files, errors
 	try:
 		assert os.path.isfile(f), "is not a file: %s" % f
-		prefix = get_prefix_for_file(f, args)
+		base_prefix = get_prefix_for_file(f, args)
+		prefix = base_prefix
 		if args.add_prefix:
 			prefix += "_" + args.add_prefix
 		newfn = os.path.dirname(f) + "/" + prefix + "__" + os.path.basename(f)
 		if os.path.exists(newfn):
 			errors[f] = os.path.basename(newfn) + " already exists"
-		elif os.path.basename(f)[0:len(prefix)] == prefix:
-			errors[f] = os.path.basename(f) + " already has the prefix '" + prefix + "'"
+		elif os.path.basename(f)[:len(base_prefix)] == base_prefix:
+			if not args.ignore_prefixed:
+				errors[f] = os.path.basename(f) + " already has the prefix '" + base_prefix + "'"
 		else:
 			files[f] = newfn
 	except exif.ExifException, e:
@@ -174,6 +176,9 @@ def main():
 	argparser.add_argument(
 		'--show_exif_only', action="store_true",
 		help="show EXIF only and don't do anything")
+	argparser.add_argument(
+		'--ignore_prefixed', action="store_true",
+		help="ignore already prefixed files")
 	argparser.add_argument(
 		'--no_action', action="store_true",
 		help="just try, don't do anything")
