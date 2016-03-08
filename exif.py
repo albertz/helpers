@@ -671,6 +671,8 @@ GPSTAGS = {
 }
 
 
+class ExifException(Exception): pass
+
 def getexif(im):
 	# Extract EXIF information.  This method is highly experimental,
 	# and is likely to be replaced with something better in a future
@@ -680,8 +682,11 @@ def getexif(im):
 
 	import os
 	if type(im) == str and os.path.isfile(im):
-		import Image
-		im = Image.open(im)
+		from PIL import Image
+        try:
+		    im = Image.open(im)
+        except Exception, e:
+            raise ExifException("error opening file: %r" % e)
 		
 	try:
 		# this works if im is an image loaded by PIL
