@@ -18,7 +18,7 @@ def is_good_entry(entry):
 	if not entry: return False # empty
 	if entry in ("cd", "ls", "ls -la", "ll"): return False
 	return True
-	
+
 def add_entry(entry):
 	filename = get_history_filename()
 	s = utc_datetime_str() + " " + entry + "\n"
@@ -29,7 +29,7 @@ def add_entry(entry):
 def maybe_add_entry(entry):
 	if not is_good_entry(entry): return
 	add_entry(entry)
-	
+
 if __name__ == "__main__":
 	try:
 		maybe_add_entry(" ".join(sys.argv[1:]))
