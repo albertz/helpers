@@ -33,8 +33,8 @@
 
 import array, string, sys
 
-II = "II" # little-endian (intel-style)
-MM = "MM" # big-endian (motorola-style)
+II = b"II" # little-endian (intel-style)
+MM = b"MM" # big-endian (motorola-style)
 
 try:
     if sys.byteorder == "little":
@@ -82,18 +82,18 @@ def _safe_read(fp, size):
 # Read TIFF files
 
 def il16(c,o=0):
-    return ord(c[o]) + (ord(c[o+1])<<8)
+    return (c[o]) + ((c[o+1])<<8)
 def il32(c,o=0):
-    return ord(c[o]) + (ord(c[o+1])<<8) + (ord(c[o+2])<<16) + (ord(c[o+3])<<24)
+    return (c[o]) + ((c[o+1])<<8) + ((c[o+2])<<16) + ((c[o+3])<<24)
 def ol16(i):
     return chr(i&255) + chr(i>>8&255)
 def ol32(i):
     return chr(i&255) + chr(i>>8&255) + chr(i>>16&255) + chr(i>>24&255)
 
 def ib16(c,o=0):
-    return ord(c[o+1]) + (ord(c[o])<<8)
+    return (c[o+1]) + (c[o]<<8)
 def ib32(c,o=0):
-    return ord(c[o+3]) + (ord(c[o+2])<<8) + (ord(c[o+1])<<16) + (ord(c[o])<<24)
+    return (c[o+3]) + ((c[o+2])<<8) + ((c[o+1])<<16) + ((c[o])<<24)
 def ob16(i):
     return chr(i>>8&255) + chr(i&255)
 def ob32(i):
@@ -255,7 +255,7 @@ class TiffImageFileDirectory:
 
     def items(self):
         items = list(self.tags.items())
-        for tag in self.tagdata.keys():
+        for tag in list(self.tagdata.keys()):
             items.append((tag, self[tag]))
         return items
 
@@ -308,7 +308,7 @@ class TiffImageFileDirectory:
     def load_byte(self, data):
         l = []
         for i in range(len(data)):
-            l.append(ord(data[i]))
+            l.append((data[i]))
         return tuple(l)
     load_dispatch[1] = (1, load_byte)
 
@@ -702,14 +702,14 @@ def getexif(im):
             # let's asume that im is Exif itself
             data = im
 
-    if type(data) != str:
-        raise Exception("expecting an image, an info-dict or Exif data")
+    if not isinstance(data, (str, bytes)):
+        raise Exception("expecting an image, an info-dict or Exif data but got %s" % type(data))
 
-    if data[0:6] != "Exif\x00\x00":
+    if data[0:6] != b"Exif\x00\x00":
         raise Exception("no exif data: " + repr(data[0:6]))
         #return None # no exif-data
 
-    from io import StringIO
+    import io
     def fixup(value):
         if len(value) == 1:
             return value[0]
@@ -718,7 +718,7 @@ def getexif(im):
     # The EXIF record consists of a TIFF file embedded in a JPEG
     # application marker (!).
 
-    file = StringIO(data[6:])
+    file = io.BytesIO(data[6:])
     head = file.read(8)
     exif = {}
 
