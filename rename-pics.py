@@ -104,7 +104,11 @@ def collect_file(f, args):
 		prefix = base_prefix
 		if args.add_prefix:
 			prefix += "_" + args.add_prefix
-		newfn = os.path.dirname(f) + "/" + prefix + "__" + os.path.basename(f)
+		postfix = ""
+		if args.add_postfix:
+			postfix += "_" + args.add_postfix
+		basename, ext = os.path.splitext(os.path.basename(f))
+		newfn = os.path.dirname(f) + "/" + prefix + "__" + basename + postfix + ext
 		if os.path.exists(newfn):
 			errors[f] = os.path.basename(newfn) + " already exists"
 		elif os.path.basename(f)[:len(base_prefix)] == base_prefix:
@@ -179,6 +183,9 @@ def main():
 	argparser.add_argument(
 		'--add_prefix', type=str,
 		help="additional prefix to add")
+	argparser.add_argument(
+		'--add_postfix', type=str,
+		help="additional postfix to add")
 	argparser.add_argument(
 		'--show_exif_only', action="store_true",
 		help="show EXIF only and don't do anything")
