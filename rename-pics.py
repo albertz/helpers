@@ -108,7 +108,8 @@ def collect_file(f, args):
 		if args.add_postfix:
 			postfix += "_" + args.add_postfix
 		basename, ext = os.path.splitext(os.path.basename(f))
-		newfn = os.path.dirname(f) + "/" + prefix + "__" + basename + postfix + ext
+		dirname = os.path.dirname(f) or "."
+		newfn = dirname + "/" + prefix + "__" + basename + postfix + ext
 		if os.path.exists(newfn):
 			errors[f] = os.path.basename(newfn) + " already exists"
 		elif os.path.basename(f)[:len(base_prefix)] == base_prefix:
