@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
 # Simple pic/mov renamer script.
 # by Albert Zeyer
