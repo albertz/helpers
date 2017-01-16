@@ -40,6 +40,10 @@ def getTotalRss():
 	return stats["rss"]
 
 
+# Force disable stdout buffering.
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)
+
+
 while True:
 	
 	limit = getRssLimit()
