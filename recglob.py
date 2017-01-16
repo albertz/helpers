@@ -4,13 +4,17 @@
 
 import os, glob, fnmatchex
 
-# usage: filepattern = dir + "/" + pattern
-# filepattern: fnmatchex expr only supported for the basename yet
-# this function iterates: dir + "/**/" + pattern
+
 def recglob(filepattern, followlinks=False):
+	"""
+	usage: filepattern = dir + "/" + pattern
+	filepattern: fnmatchex expr only supported for the basename yet
+	this function iterates: dir + "/**/" + pattern
+	"""
+
 	dir = os.path.dirname(filepattern)
 	filepattern = os.path.basename(filepattern)
-	
+
 	# use iglob instead of listdir to get a lazy list
 	for f in glob.iglob(dir + "/*"):
 		if not followlinks and os.path.islink(f) and os.path.isdir(f):

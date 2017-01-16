@@ -3,8 +3,11 @@
 # code under zlib
 
 def cleanupstr(s):
+	if isinstance(s, str):
+		s = bytes(s)
+	assert isinstance(s, bytes)
 	ret = ""
 	for c in s:
-		if ord(c) < 32: continue
-		ret += c
+		if c < 32: continue
+		ret += chr(c)
 	return ret

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Simple pic/mov renamer script.
 # by Albert Zeyer
@@ -6,7 +6,6 @@
 
 
 import argparse
-from glob import *
 from recglob import *
 from cleanupstr import *
 from pprint import pprint
@@ -18,13 +17,14 @@ better_exchook.install()
 
 def cleanup_exif_tags(exif):
 	ret = {}
-	for tag, value in exif.iteritems():
+	for tag, value in exif.items():
 		if type(tag) is int: continue
 		if tag == "MakerNote": continue
-		if type(value) is str:
+		if isinstance(value, (str, bytes)):
 			value = cleanupstr(value).strip()
 		ret[tag] = value
 	return ret
+
 
 def file_time_creation(f):
 	import os, time
@@ -34,28 +34,31 @@ def file_time_creation(f):
 	except Exception:
 		t = stats.st_ctime
 	return time.strftime("%Y:%m:%d %H:%M:%S", time.localtime(t))
-	
+
+
 def iminfo(f):
 	try:
 		info = cleanup_exif_tags(exif.getexif(f))
-	except Exception:
+	except exif.ExifException:
 		info = {}
 	if not "DateTime" in info:
 		info["DateTime"] = file_time_creation(f)
 	return info
 
+
 def user_input(text, convfunc):
 	while True:
 		try:
-			s = raw_input(text)
+			s = input(text)
 			return convfunc(s)
-		except Exception, e:
-			print "Error:", e
+		except Exception as e:
+			print("Error:", e)
+
 
 def str_to_bool(s):
 	if s.lower() in ["y", "yes", "ja", "j", "1"]: return True
 	if s.lower() in ["n", "no", "nein", "0"]: return False
-	raise Exception, "I don't understand '" + s + "'; please give me an Y or N"
+	raise Exception("I don't understand %r; please give me an Y or N" % s)
 
 
 files = {}
@@ -70,22 +73,25 @@ def get_prefix_for_file(f, args):
 	prefix = date_time_str[:date_time_plen]
 	return prefix
 
+
 def user_repr(v):
 	if isinstance(v, str):
 		if len(v) > 30: return repr(v[:30]) + "..."
 		return repr(v)
 	return repr(v)
 
+
 def dump_exif(f):
-	print "File", f, ":"
+	print("File", f, ":")
 	try:
 		info = exif.getexif(f)
-	except exif.ExifException, e:
-		print "  Error:", e
+	except exif.ExifException as e:
+		print("  Error:", e)
 	else:
 		for k, v in sorted(info.items()):
-			print " ", k, ":", user_repr(v)
-	print "  file creation time:", file_time_creation(f)
+			print(" ", k, ":", user_repr(v))
+	print("  file creation time:", file_time_creation(f))
+
 
 def collect_file(f, args):
 	if args.show_exif_only:
@@ -98,7 +104,12 @@ def collect_file(f, args):
 		prefix = base_prefix
 		if args.add_prefix:
 			prefix += "_" + args.add_prefix
-		newfn = os.path.dirname(f) + "/" + prefix + "__" + os.path.basename(f)
+		postfix = ""
+		if args.add_postfix:
+			postfix += "_" + args.add_postfix
+		basename, ext = os.path.splitext(os.path.basename(f))
+		dirname = os.path.dirname(f) or "."
+		newfn = dirname + "/" + prefix + "__" + basename + postfix + ext
 		if os.path.exists(newfn):
 			errors[f] = os.path.basename(newfn) + " already exists"
 		elif os.path.basename(f)[:len(base_prefix)] == base_prefix:
@@ -106,7 +117,7 @@ def collect_file(f, args):
 				errors[f] = os.path.basename(f) + " already has the prefix '" + base_prefix + "'"
 		else:
 			files[f] = newfn
-	except exif.ExifException, e:
+	except exif.ExifException as e:
 		errors[f] = str(e)
 
 
@@ -126,33 +137,33 @@ def collect(fn, args):
 def user_loop(args):
 	while True:
 		if len(files) > 0:
-			print "Renames:"
+			print("Renames:")
 			for old, new in sorted(files.items()):
-				print "", old, "->", os.path.basename(new)
-			print ""
+				print("", old, "->", os.path.basename(new))
+			print("")
 
 		if len(errors) > 0:
-			print "Errors (i.e. excluded files):"
+			print("Errors (i.e. excluded files):")
 			for f, err in sorted(errors.items()):
-				print "", f, ":", err
-			print ""
+				print("", f, ":", err)
+			print("")
 
 		if len(files) == 0:
-			print "No files to rename. Quitting."
+			print("No files to rename. Quitting.")
 			quit()
 
 		if args.no_action:
-			print "No action (--no_action). Quitting."
+			print("No action (--no_action). Quitting.")
 			quit()
 
 		ok = user_input("Confirm? (Y/N) ", str_to_bool)
 		if ok:
 			for old, new in sorted(files.items()):
 				os.rename(old, new)
-			print "All renames successfull."
+			print("All renames successfull.")
 			quit()
 		else:
-			print "Abborting."
+			print("Abborting.")
 			quit()
 
 
@@ -174,6 +185,9 @@ def main():
 		'--add_prefix', type=str,
 		help="additional prefix to add")
 	argparser.add_argument(
+		'--add_postfix', type=str,
+		help="additional postfix to add")
+	argparser.add_argument(
 		'--show_exif_only', action="store_true",
 		help="show EXIF only and don't do anything")
 	argparser.add_argument(
@@ -189,9 +203,10 @@ def main():
 
 	user_loop(args)
 
+
 if __name__ == "__main__":
 	try:
 		main()
 	except KeyboardInterrupt:
-		print "KeyboardInterrupt. Abborting."
+		print("KeyboardInterrupt. Abborting.")
 		quit()

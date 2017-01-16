@@ -33,8 +33,8 @@
 
 import array, string, sys
 
-II = "II" # little-endian (intel-style)
-MM = "MM" # big-endian (motorola-style)
+II = b"II" # little-endian (intel-style)
+MM = b"MM" # big-endian (motorola-style)
 
 try:
     if sys.byteorder == "little":
@@ -82,18 +82,18 @@ def _safe_read(fp, size):
 # Read TIFF files
 
 def il16(c,o=0):
-    return ord(c[o]) + (ord(c[o+1])<<8)
+    return (c[o]) + ((c[o+1])<<8)
 def il32(c,o=0):
-    return ord(c[o]) + (ord(c[o+1])<<8) + (ord(c[o+2])<<16) + (ord(c[o+3])<<24)
+    return (c[o]) + ((c[o+1])<<8) + ((c[o+2])<<16) + ((c[o+3])<<24)
 def ol16(i):
     return chr(i&255) + chr(i>>8&255)
 def ol32(i):
     return chr(i&255) + chr(i>>8&255) + chr(i>>16&255) + chr(i>>24&255)
 
 def ib16(c,o=0):
-    return ord(c[o+1]) + (ord(c[o])<<8)
+    return (c[o+1]) + (c[o]<<8)
 def ib32(c,o=0):
-    return ord(c[o+3]) + (ord(c[o+2])<<8) + (ord(c[o+1])<<16) + (ord(c[o])<<24)
+    return (c[o+3]) + ((c[o+2])<<8) + ((c[o+1])<<16) + ((c[o])<<24)
 def ob16(i):
     return chr(i>>8&255) + chr(i&255)
 def ob32(i):
@@ -251,11 +251,11 @@ class TiffImageFileDirectory:
     # dictionary API (sort of)
 
     def keys(self):
-        return self.tagdata.keys() + self.tags.keys()
+        return list(self.tagdata.keys()) + list(self.tags.keys())
 
     def items(self):
-        items = self.tags.items()
-        for tag in self.tagdata.keys():
+        items = list(self.tags.items())
+        for tag in list(self.tagdata.keys()):
             items.append((tag, self[tag]))
         return items
 
@@ -285,8 +285,8 @@ class TiffImageFileDirectory:
                 if tag == SAMPLEFORMAT:
                     # work around broken (?) matrox library
                     # (from Ted Wright, via Bob Klimek)
-                    raise KeyError # use default
-                raise ValueError, "not a scalar"
+                    raise KeyError() # use default
+                raise ValueError("not a scalar")
             return value[0]
         except KeyError:
             if default is None:
@@ -294,7 +294,7 @@ class TiffImageFileDirectory:
             return default
 
     def has_key(self, tag):
-        return self.tags.has_key(tag) or self.tagdata.has_key(tag)
+        return tag in self.tags or tag in self.tagdata
 
     def __setitem__(self, tag, value):
         if type(value) is not type(()):
@@ -308,7 +308,7 @@ class TiffImageFileDirectory:
     def load_byte(self, data):
         l = []
         for i in range(len(data)):
-            l.append(ord(data[i]))
+            l.append((data[i]))
         return tuple(l)
     load_dispatch[1] = (1, load_byte)
 
@@ -376,14 +376,14 @@ class TiffImageFileDirectory:
                 import TiffTags
                 tagname = TiffTags.TAGS.get(tag, "unknown")
                 typname = TiffTags.TYPES.get(typ, "unknown")
-                print "tag: %s (%d)" % (tagname, tag),
-                print "- type: %s (%d)" % (typname, typ),
+                print("tag: %s (%d)" % (tagname, tag),)
+                print("- type: %s (%d)" % (typname, typ),)
 
             try:
                 dispatch = self.load_dispatch[typ]
             except KeyError:
                 if DEBUG:
-                    print "- unsupported type", typ
+                    print("- unsupported type", typ)
                 continue # ignore unsupported type
 
             size, handler = dispatch
@@ -409,9 +409,9 @@ class TiffImageFileDirectory:
 
             if DEBUG:
                 if tag in (COLORMAP, IPTC_NAA_CHUNK, PHOTOSHOP_CHUNK, ICCPROFILE, XMP):
-                    print "- value: <table: %d bytes>" % size
+                    print("- value: <table: %d bytes>" % size)
                 else:
-                    print "- value:", self[tag]
+                    print("- value:", self[tag])
 
         self.next = i32(fp.read(4))
 
@@ -425,8 +425,7 @@ class TiffImageFileDirectory:
         fp.write(o16(len(self.tags)))
 
         # always write in ascending tag order
-        tags = self.tags.items()
-        tags.sort()
+        tags = sorted(self.tags.items())
 
         directory = []
         append = directory.append
@@ -440,7 +439,7 @@ class TiffImageFileDirectory:
 
             typ = None
 
-            if self.tagtype.has_key(tag):
+            if tag in self.tagtype:
                 typ = self.tagtype[tag]
 
             if typ == 1:
@@ -475,13 +474,13 @@ class TiffImageFileDirectory:
                 import TiffTags
                 tagname = TiffTags.TAGS.get(tag, "unknown")
                 typname = TiffTags.TYPES.get(typ, "unknown")
-                print "save: %s (%d)" % (tagname, tag),
-                print "- type: %s (%d)" % (typname, typ),
+                print("save: %s (%d)" % (tagname, tag),)
+                print("- type: %s (%d)" % (typname, typ),)
                 if tag in (COLORMAP, IPTC_NAA_CHUNK, PHOTOSHOP_CHUNK, ICCPROFILE, XMP):
                     size = len(data)
-                    print "- value: <table: %d bytes>" % size
+                    print("- value: <table: %d bytes>" % size)
                 else:
-                    print "- value:", value
+                    print("- value:", value)
 
             # figure out if data fits into the directory
             if len(data) == 4:
@@ -507,7 +506,7 @@ class TiffImageFileDirectory:
         # pass 2: write directory to file
         for tag, typ, count, value, data in directory:
             if DEBUG > 1:
-                print tag, typ, count, repr(value), repr(data)
+                print(tag, typ, count, repr(value), repr(data))
             fp.write(o16(tag) + o16(typ) + o32(count) + value)
 
         # -- overwrite here for multi-page --
@@ -674,86 +673,86 @@ GPSTAGS = {
 class ExifException(Exception): pass
 
 def getexif(im):
-	# Extract EXIF information.  This method is highly experimental,
-	# and is likely to be replaced with something better in a future
-	# version.
+    # Extract EXIF information.  This method is highly experimental,
+    # and is likely to be replaced with something better in a future
+    # version.
 
-	data = None
+    data = None
 
-	import os
-	if type(im) == str and os.path.isfile(im):
-		from PIL import Image
+    import os
+    if type(im) == str and os.path.isfile(im):
+        from PIL import Image
         try:
-		    im = Image.open(im)
-        except Exception, e:
+            im = Image.open(im)
+        except Exception as e:
             raise ExifException("error opening file: %r" % e)
-		
-	try:
-		# this works if im is an image loaded by PIL
-		data = im.info["exif"]
-	except KeyError:
-		return {} # it meens there is no Exif entry
-	except:
-		try:
-			# maybe this is the info-dict of an image loaded by PIL
-			data = im["exif"]
-		except KeyError:
-			return {} # it meens there is no Exif entry
-		except:
-			# let's asume that im is Exif itself
-			data = im
 
-	if type(data) != str:
-		raise Exception("expecting an image, an info-dict or Exif data")
+    try:
+        # this works if im is an image loaded by PIL
+        data = im.info["exif"]
+    except KeyError:
+        return {} # it meens there is no Exif entry
+    except:
+        try:
+            # maybe this is the info-dict of an image loaded by PIL
+            data = im["exif"]
+        except KeyError:
+            return {} # it meens there is no Exif entry
+        except:
+            # let's asume that im is Exif itself
+            data = im
 
-	if data[0:6] != "Exif\x00\x00":
-		raise Exception("no exif data: " + repr(data[0:6]))
-		#return None # no exif-data
+    if not isinstance(data, (str, bytes)):
+        raise Exception("expecting an image, an info-dict or Exif data but got %s" % type(data))
 
-	import StringIO
-	def fixup(value):
-		if len(value) == 1:
-			return value[0]
-		return value
+    if data[0:6] != b"Exif\x00\x00":
+        raise Exception("no exif data: " + repr(data[0:6]))
+        #return None # no exif-data
 
-	# The EXIF record consists of a TIFF file embedded in a JPEG
-	# application marker (!).
+    import io
+    def fixup(value):
+        if len(value) == 1:
+            return value[0]
+        return value
 
-	file = StringIO.StringIO(data[6:])
-	head = file.read(8)
-	exif = {}
-	
-	# process dictionary
-	info = TiffImageFileDirectory(head)
-	info.load(file)
-	for key, value in info.items():
-		exif[key] = fixup(value)
-	
-	# get exif extension
-	try:
-		file.seek(exif[0x8769])
-	except KeyError:
-		pass
-	else:
-		info = TiffImageFileDirectory(head)
-		info.load(file)
-		for key, value in info.items():
-			exif[key] = fixup(value)
-	
-	# get gpsinfo extension
-	try:
-		file.seek(exif[0x8825])
-	except KeyError:
-		pass
-	else:
-		info = TiffImageFileDirectory(head)
-		info.load(file)
-		exif[0x8825] = gps = {}
-		for key, value in info.items():
-			gps[key] = fixup(value)
-			
-	ret = {}
-	for tag, value in exif.iteritems():
-		decoded = TAGS.get(tag, tag)
-		ret[decoded] = value
-	return ret
+    # The EXIF record consists of a TIFF file embedded in a JPEG
+    # application marker (!).
+
+    file = io.BytesIO(data[6:])
+    head = file.read(8)
+    exif = {}
+
+    # process dictionary
+    info = TiffImageFileDirectory(head)
+    info.load(file)
+    for key, value in info.items():
+        exif[key] = fixup(value)
+
+    # get exif extension
+    try:
+        file.seek(exif[0x8769])
+    except KeyError:
+        pass
+    else:
+        info = TiffImageFileDirectory(head)
+        info.load(file)
+        for key, value in info.items():
+            exif[key] = fixup(value)
+
+    # get gpsinfo extension
+    try:
+        file.seek(exif[0x8825])
+    except KeyError:
+        pass
+    else:
+        info = TiffImageFileDirectory(head)
+        info.load(file)
+        exif[0x8825] = gps = {}
+        for key, value in info.items():
+            gps[key] = fixup(value)
+
+    ret = {}
+    for tag, value in exif.items():
+        decoded = TAGS.get(tag, tag)
+        ret[decoded] = value
+    return ret
