@@ -10,7 +10,7 @@ from recglob import *
 from cleanupstr import *
 from pprint import pprint
 import exif
-import sys, os
+import sys, os, time
 import better_exchook
 better_exchook.install()
 
@@ -64,6 +64,7 @@ def str_to_bool(s):
 
 
 files = {}
+files_utime = {}
 errors = {}
 
 
@@ -117,14 +118,23 @@ def dump_exif(f):
     print("  file creation time:", file_time_creation(f))
 
 
+def file_mtime_underscore(f):
+    return time.strftime("%Y_%m_%d %H_%M_%S", time.localtime(os.stat(f).st_mtime))
+
+
 def collect_file(f, args):
     if args.show_exif_only:
         dump_exif(f)
         return
-    global files, errors
+    global files, files_utime, errors
     try:
         assert os.path.isfile(f), "is not a file: %s" % f
         date_prefix, time_prefix = get_prefix_for_file(f, args)
+        if args.utime:
+            # Will use os.utime(), thus better check mtime for consistency.
+            file_mtime = file_mtime_underscore(f)
+            if date_prefix + " " + time_prefix != file_mtime:
+                files_utime[f] = (file_mtime, date_prefix + " " + time_prefix)
         base_prefix = date_prefix
         if args.add_time:
             base_prefix += "_" + time_prefix
@@ -168,19 +178,25 @@ def collect(fn, args):
 
 def user_loop(args):
     while True:
-        if len(files) > 0:
-            print("Renames:")
-            for old, new in sorted(files.items()):
-                print("", old, "->", os.path.basename(new))
-            print("")
-
         if len(errors) > 0:
             print("Errors (i.e. excluded files):")
             for f, err in sorted(errors.items()):
                 print("", f, ":", err)
             print("")
 
-        if len(files) == 0:
+        if len(files) > 0:
+            print("Renames:")
+            for old, new in sorted(files.items()):
+                print("", old, "->", os.path.basename(new))
+            print("")
+
+        if len(files_utime) > 0:
+            print("Change times:")
+            for f, (old, new) in sorted(files_utime.items()):
+                print("", f, ":", old, "->", new)
+            print("")
+
+        if len(files) == 0 and len(files_utime) == 0:
             print("No files to rename. Quitting.")
             quit()
 
@@ -190,9 +206,15 @@ def user_loop(args):
 
         ok = user_input("Confirm? (Y/N) ", str_to_bool)
         if ok:
-            for old, new in sorted(files.items()):
-                os.rename(old, new)
-            print("All renames successfull.")
+            if len(files) > 0:
+                for old, new in sorted(files.items()):
+                    os.rename(old, new)
+                print("All renames successfull.")
+            if len(files_utime) > 0:
+                for f, (old, new) in sorted(files_utime.items()):
+                    t = time.strptime(new, "%Y_%m_%d %H_%M_%S")
+                    t = time.mktime(t)
+                    os.utime(f, (t, t))
             quit()
         else:
             print("Abborting.")
@@ -225,6 +247,8 @@ def main():
     argparser.add_argument(
         '--ignore_prefixed', action="store_true",
         help="ignore already prefixed files")
+    argparser.add_argument(
+        "--utime", action="store_true", help="change mtime")
     argparser.add_argument(
         '--no_action', action="store_true",
         help="just try, don't do anything")
