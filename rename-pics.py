@@ -41,7 +41,9 @@ def iminfo(f):
         info = cleanup_exif_tags(exif.getexif(f))
     except exif.ExifException:
         info = {}
-    if not "DateTime" in info:
+    if "DateTimeOriginal" in info:
+        info["DateTime"] = info["DateTimeOriginal"]
+    if "DateTime" not in info:
         info["DateTime"] = file_time_creation(f)
     return info
 
@@ -64,14 +66,36 @@ def str_to_bool(s):
 files = {}
 errors = {}
 
+
 def get_prefix_for_file(f, args):
+    """
+
+    Args:
+        f (str):
+
+    Returns:
+        (str, str):
+    """
     info = iminfo(f)
     date_time_str = info["DateTime"].replace(":", "_").replace(" ", "_")
-    date_time_plen = 10  # prefix, eg. "2011_01_22"
-    if args.add_time:
-        date_time_plen += 9  # e.g. "_12_30_00"
-    prefix = date_time_str[:date_time_plen]
-    return prefix
+    # prefix, eg. "2011_01_22", and time
+    return date_time_str[:10], date_time_str[11:19]
+
+
+def maybe_remove(s, content):
+    """
+    Args:
+        s (str):
+        content (str):
+
+    Returns:
+        str:
+    """
+    s = s.replace("_" + content + "_", "")
+    s = s.replace("_" + content, "")
+    s = s.replace(content + "_", "")
+    s = s.replace(content, "")
+    return s
 
 
 def user_repr(v):
@@ -88,8 +112,8 @@ def dump_exif(f):
     except exif.ExifException as e:
         print("  Error:", e)
     else:
-        for k, v in sorted(info.items()):
-            print(" ", k, ":", user_repr(v))
+        for k in sorted([k for k in info if isinstance(k, str)]) + sorted([k for k in info if not isinstance(k, str)]):
+            print(" ", k, ":", user_repr(info[k]))
     print("  file creation time:", file_time_creation(f))
 
 
@@ -100,7 +124,10 @@ def collect_file(f, args):
     global files, errors
     try:
         assert os.path.isfile(f), "is not a file: %s" % f
-        base_prefix = get_prefix_for_file(f, args)
+        date_prefix, time_prefix = get_prefix_for_file(f, args)
+        base_prefix = date_prefix
+        if args.add_time:
+            base_prefix += "_" + time_prefix
         prefix = base_prefix
         if args.add_prefix:
             prefix += "_" + args.add_prefix
@@ -108,6 +135,11 @@ def collect_file(f, args):
         if args.add_postfix:
             postfix += "_" + args.add_postfix
         basename, ext = os.path.splitext(os.path.basename(f))
+        basename = maybe_remove(basename, date_prefix)
+        basename = maybe_remove(basename, date_prefix.replace("_", ""))
+        if args.add_time:
+            basename = maybe_remove(basename, time_prefix)
+            basename = maybe_remove(basename, time_prefix.replace("_", ""))
         dirname = os.path.dirname(f) or "."
         newfn = dirname + "/" + prefix + "__" + basename + postfix + ext
         if os.path.exists(newfn):
