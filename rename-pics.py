@@ -11,6 +11,7 @@ from cleanupstr import *
 from pprint import pprint
 import exif
 import sys, os, time
+from subprocess import check_call
 import better_exchook
 better_exchook.install()
 
@@ -118,8 +119,8 @@ def dump_exif(f):
     print("  file creation time:", file_time_creation(f))
 
 
-def file_mtime_underscore(f):
-    return time.strftime("%Y_%m_%d %H_%M_%S", time.localtime(os.stat(f).st_mtime))
+def file_ctime_underscore(f):
+    return file_time_creation(f).replace(":", "_")
 
 
 def collect_file(f, args):
@@ -131,10 +132,9 @@ def collect_file(f, args):
         assert os.path.isfile(f), "is not a file: %s" % f
         date_prefix, time_prefix = get_prefix_for_file(f, args)
         if args.utime:
-            # Will use os.utime(), thus better check mtime for consistency.
-            file_mtime = file_mtime_underscore(f)
-            if date_prefix + " " + time_prefix != file_mtime:
-                files_utime[f] = (file_mtime, date_prefix + " " + time_prefix)
+            file_ctime = file_ctime_underscore(f)
+            if date_prefix + " " + time_prefix != file_ctime:
+                files_utime[f] = (file_ctime, date_prefix + " " + time_prefix)
         base_prefix = date_prefix
         if args.add_time:
             base_prefix += "_" + time_prefix
@@ -166,6 +166,28 @@ def collect_file(f, args):
 def collect_dir(dir, args):
     for f in recglob(dir + "/*.{jpeg,jpg,JPG,mov,MOV,png,PNG}"):
         collect_file(f, args)
+
+
+def change_ctime(f, new_time):
+    """
+    Args:
+        f (str):
+        new_time (str): like "2017_09_05 13_23_49"
+
+    Returns:
+        Nothing.
+    """
+    if sys.platform == "darwin":
+        t = time.strptime(new_time, "%Y_%m_%d %H_%M_%S")
+        # SetFile format: "mm/dd/[yy]yy [hh:mm:[:ss] [AM | PM]]"
+        t = time.strftime("%m/%d/%Y %H:%M:%S", t)
+        args = ["SetFile", "-d", t, f]
+        print("call:", args)
+        check_call(args)
+    else:
+        t = time.strptime(new_time, "%Y_%m_%d %H_%M_%S")
+        t = time.mktime(t)
+        os.utime(f, (t, t))
 
 
 def collect(fn, args):
@@ -212,9 +234,7 @@ def user_loop(args):
                 print("All renames successfull.")
             if len(files_utime) > 0:
                 for f, (old, new) in sorted(files_utime.items()):
-                    t = time.strptime(new, "%Y_%m_%d %H_%M_%S")
-                    t = time.mktime(t)
-                    os.utime(f, (t, t))
+                    change_ctime(f, new)
             quit()
         else:
             print("Abborting.")
