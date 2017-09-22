@@ -123,6 +123,11 @@ def file_ctime_underscore(f):
     return file_time_creation(f).replace(":", "_")
 
 
+def file_mtime_underscore(f):
+    t = os.stat(f).st_mtime
+    return time.strftime("%Y_%m_%d %H_%M_%S", time.localtime(t))
+
+
 def collect_file(f, args):
     if args.show_exif_only:
         dump_exif(f)
@@ -132,7 +137,10 @@ def collect_file(f, args):
         assert os.path.isfile(f), "is not a file: %s" % f
         date_prefix, time_prefix = get_prefix_for_file(f, args)
         if args.utime:
-            file_ctime = file_ctime_underscore(f)
+            if args.mtime:
+                file_ctime = file_mtime_underscore(f)
+            else:
+                file_ctime = file_ctime_underscore(f)
             if date_prefix + " " + time_prefix != file_ctime:
                 files_utime[f] = (file_ctime, date_prefix + " " + time_prefix)
         base_prefix = date_prefix
@@ -177,17 +185,15 @@ def change_ctime(f, new_time):
     Returns:
         Nothing.
     """
+    ttup = time.strptime(new_time, "%Y_%m_%d %H_%M_%S")
     if sys.platform == "darwin":
-        t = time.strptime(new_time, "%Y_%m_%d %H_%M_%S")
         # SetFile format: "mm/dd/[yy]yy [hh:mm:[:ss] [AM | PM]]"
-        t = time.strftime("%m/%d/%Y %H:%M:%S", t)
-        args = ["SetFile", "-d", t, f]
+        tstr = time.strftime("%m/%d/%Y %H:%M:%S", ttup)
+        args = ["SetFile", "-d", tstr, f]
         print("call:", args)
         check_call(args)
-    else:
-        t = time.strptime(new_time, "%Y_%m_%d %H_%M_%S")
-        t = time.mktime(t)
-        os.utime(f, (t, t))
+    tsecs = time.mktime(ttup)
+    os.utime(f, (tsecs, tsecs))
 
 
 def collect(fn, args):
@@ -219,7 +225,10 @@ def user_loop(args):
             print("")
 
         if len(files) == 0 and len(files_utime) == 0:
-            print("No files to rename. Quitting.")
+            if args.utime:
+                print("No files to rename or touch. Quitting.")
+            else:
+                print("No files to rename. Quitting.")
             quit()
 
         if args.no_action:
@@ -266,9 +275,11 @@ def main():
         help="show EXIF only and don't do anything")
     argparser.add_argument(
         '--ignore_prefixed', action="store_true",
-        help="ignore already prefixed files")
+        help="don't rename already prefixed files")
     argparser.add_argument(
-        "--utime", action="store_true", help="change mtime")
+        "--utime", action="store_true", help="change ctime/mtime")
+    argparser.add_argument(
+        "--mtime", action="store_true", help="look at mtime")
     argparser.add_argument(
         '--no_action', action="store_true",
         help="just try, don't do anything")
