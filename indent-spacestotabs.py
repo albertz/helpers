@@ -4,7 +4,7 @@
 import getopt, sys, io
 
 def usage():
-	print("usage: %s -n <spacenum> [-i] [infile]", sys.argv[0])
+	print("usage: %s -n <spacenum> [-i] [infile]" % sys.argv[0])
 	exit(1)
 
 try:
