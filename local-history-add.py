@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import os, sys
+import os
 
 login_user = None
+
 
 def get_login_user():
 	if login_user:
@@ -10,12 +11,15 @@ def get_login_user():
 	import pwd, os
 	return pwd.getpwuid(os.getuid())[0]
 
+
 def utc_datetime_str():
 	from datetime import datetime
 	return datetime.utcnow().strftime("%Y-%m-%d.%H-%M-%S")
 
+
 def get_history_filename():
 	return os.getcwd() + "/.history." + get_login_user()
+
 
 def is_good_entry(entry):
 	entry = entry.strip()
@@ -25,6 +29,7 @@ def is_good_entry(entry):
 		return False
 	return True
 
+
 def add_entry(entry):
 	filename = get_history_filename()
 	s = utc_datetime_str() + " " + entry + "\n"
@@ -32,10 +37,12 @@ def add_entry(entry):
 	f.write(s)
 	f.close()
 
+
 def maybe_add_entry(entry):
 	if not is_good_entry(entry):
 		return
 	add_entry(entry)
+
 
 def main():
 	global login_user
@@ -48,7 +55,7 @@ def main():
 		login_user = args.user
 	try:
 		maybe_add_entry(args.text)
-	except IOError as e:
+	except IOError:
 		pass
 
 
