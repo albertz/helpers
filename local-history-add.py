@@ -8,7 +8,8 @@ login_user = None
 def get_login_user():
 	if login_user:
 		return login_user
-	import pwd, os
+	import pwd
+	import os
 	return pwd.getpwuid(os.getuid())[0]
 
 
