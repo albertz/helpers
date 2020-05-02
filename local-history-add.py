@@ -24,6 +24,8 @@ def get_history_filename() -> str:
 
 
 def is_good_entry(entry: str) -> bool:
+	if entry.startswith(" "):  # by convention, this is intended not to be saved
+		return False
 	entry = entry.strip()
 	if not entry:
 		return False  # empty
