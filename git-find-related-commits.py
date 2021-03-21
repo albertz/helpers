@@ -5,7 +5,7 @@ https://stackoverflow.com/questions/66731069/how-to-find-pairs-groups-of-most-re
 """
 
 from __future__ import annotations
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import git
 import contextlib
 import sys
@@ -36,11 +36,12 @@ class GitHelper:
     """
     return list(reversed(list(self.repo.iter_commits(f"{self.get_base_commit()}..{self.local_branch}"))))
 
-  def test_commit_pair(self, commits: List[git.Commit]) -> Optional[int]:
+  def test_commit_pair(self, commits: List[git.Commit]) -> Tuple[Optional[int], List[str]]:
     commit0 = commits[0]
     assert len(commit0.parents) == 1  # not implemented otherwise...
     commit0 = commit0.parents[0]
     # print(f"Start at {_format_commit(commit0)}")
+    diffs = []
     diff_counts = []
     with self.in_tmp_branch(commit0):
       for commit in commits:
@@ -48,10 +49,11 @@ class GitHelper:
         try:
           self.repo.git.cherry_pick(commit, "--keep-redundant-commits")
         except git.GitCommandError:
-          return None
+          return None, diffs
         diff_str = self.repo.git.diff(f"{commit0}..HEAD")
+        diffs.append(diff_str)
         diff_counts.append(_count_changed_lines(diff_str))
-    return diff_counts[-1] - diff_counts[0]
+    return diff_counts[-1] - diff_counts[0], diffs
 
   def test(self):
     commits = self.get_commit_list()
@@ -63,14 +65,19 @@ class GitHelper:
     for i in range(len(commits)):
       for j in range(i + 1, len(commits)):
         commit_pair = [commits[i], commits[j]]
-        c = self.test_commit_pair(commit_pair)
+        c, diffs = self.test_commit_pair(commit_pair)
         print("Commits:", [_format_commit(commit) for commit in commit_pair], "relative diff count:", c)
-        if c is not None and c < 0:
-          results.append((c, commit_pair))
+        if c is not None:
+          results.append((c, commit_pair, diffs))
+
     print("Done. Results:")
-    results.sort()
-    for c, commit_pair in results:
-      print(c, "commits:", [_format_commit(commit) for commit in commit_pair])
+    limit = 10
+    results.sort(key=lambda x: x[0])
+    for c, commit_pair, diffs in results[:limit]:
+      print("***", c, "commits:", [_format_commit(commit) for commit in commit_pair])
+      assert len(commit_pair) == len(diffs)
+    if len(results) > limit:
+      print("...")
 
   @contextlib.contextmanager
   def in_tmp_branch(self, commit: git.Commit) -> git.Head:
