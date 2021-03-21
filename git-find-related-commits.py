@@ -71,13 +71,10 @@ class GitHelper:
           results.append((c, commit_pair, diffs))
 
     print("Done. Results:")
-    limit = 10
     results.sort(key=lambda x: x[0])
-    for c, commit_pair, diffs in results[:limit]:
+    for c, commit_pair, diffs in results:
       print("***", c, "commits:", [_format_commit(commit) for commit in commit_pair])
       assert len(commit_pair) == len(diffs)
-    if len(results) > limit:
-      print("...")
 
   @contextlib.contextmanager
   def in_tmp_branch(self, commit: git.Commit) -> git.Head:
