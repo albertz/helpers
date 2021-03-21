@@ -36,7 +36,7 @@ class GitHelper:
     """
     return list(reversed(list(self.repo.iter_commits(f"{self.get_base_commit()}..{self.local_branch}"))))
 
-  def test_commit_pair(self, commits: List[git.Commit]) -> Tuple[Optional[int], List[str]]:
+  def score_commit_pair_squash(self, commits: List[git.Commit]) -> Tuple[Optional[int], List[str]]:
     commit0 = commits[0]
     assert len(commit0.parents) == 1  # not implemented otherwise...
     commit0 = commit0.parents[0]
@@ -51,9 +51,17 @@ class GitHelper:
         except git.GitCommandError:
           return None, diffs
         diff_str = self.repo.git.diff(f"{commit0}..HEAD")
+        c = _count_changed_lines(diff_str)
+        if diff_counts:
+          commit_diff_str = self.repo.git.show(commit)
+          cc = _count_changed_lines(commit_diff_str)
+          rel_diff = c - diff_counts[-1]
+          if rel_diff >= cc:  # this commit has no influence on the prev commit. so skip this whole proposed squash
+            return None, diffs
         diffs.append(diff_str)
-        diff_counts.append(_count_changed_lines(diff_str))
-    return diff_counts[-1] - diff_counts[0], diffs
+        diff_counts.append(c)
+    rel_diff = diff_counts[-1] - diff_counts[0]
+    return rel_diff, diffs
 
   def test(self):
     commits = self.get_commit_list()
@@ -65,7 +73,7 @@ class GitHelper:
     for i in range(len(commits)):
       for j in range(i + 1, len(commits)):
         commit_pair = [commits[i], commits[j]]
-        c, diffs = self.test_commit_pair(commit_pair)
+        c, diffs = self.score_commit_pair_squash(commit_pair)
         print("Commits:", [_format_commit(commit) for commit in commit_pair], "relative diff count:", c)
         if c is not None:
           results.append((c, commit_pair, diffs))
