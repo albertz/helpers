@@ -2,14 +2,15 @@
 
 """
 https://stackoverflow.com/questions/66731069/how-to-find-pairs-groups-of-most-related-commits
+https://www.reddit.com/r/learnprogramming/comments/pftenx/how_to_cleanup_a_branch_pr_with_huge_number_of/
 """
 
 from __future__ import annotations
 from typing import List, Optional, Tuple
-import git
+import git  # pip install GitPython
 import contextlib
 import sys
-import better_exchook
+import better_exchook  # pip install better_exchook
 
 
 _TmpBranchName = "tmp-find-related-commits"
