@@ -4,25 +4,25 @@
 import getopt, sys, io
 
 def usage():
-	print "usage:", sys.argv[0], "-n <spacenum> [-i] [infile]"
+	print("usage:", sys.argv[0], "-n <spacenum> [-i] [infile]")
 	exit(1)
 
 try:
 	opts, args = getopt.getopt(sys.argv[1:], "in:")
 except getopt.GetoptError as e:
-	print e.msg
+	print(e.msg)
 	usage()
 opts = dict(opts)
 
 if not "-n" in opts: usage()
 spacenum = int(opts["-n"])
 if spacenum < 1:
-	print "spacenum must be >=1"
+	print("spacenum must be >=1")
 	usage()
 if len(args) > 1: usage()
 inplace = "-i" in opts
 if inplace and len(args) == 0:
-	print "inplace does not make sense for stdin"
+	print("inplace does not make sense for stdin")
 	usage()
 
 infile = open(args[0]) if args else sys.stdin
@@ -32,8 +32,8 @@ while True:
 	l = infile.readline()
 	if l == "": break	
 	
-	newl = u''
-	for i in xrange(0,len(l)):
+	newl = ''
+	for i in range(0,len(l)):
 		c = l[i]
 		if c == " ":
 			newl += " "
