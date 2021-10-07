@@ -1,7 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import getopt, sys, io
+import getopt
+import sys
+import io
 
 def usage():
 	print("usage:", sys.argv[0], "-n <spacenum> [-i] [infile]")
