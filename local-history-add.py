@@ -15,8 +15,8 @@ def get_login_user() -> str:
 
 
 def utc_datetime_str() -> str:
-	from datetime import datetime
-	return datetime.utcnow().strftime("%Y-%m-%d.%H-%M-%S")
+	from datetime import datetime, timezone
+	return datetime.now(timezone.utc).strftime("%Y-%m-%d.%H-%M-%S")
 
 
 def get_history_filename() -> str:
