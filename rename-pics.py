@@ -9,7 +9,7 @@ from typing import Optional, Any, Tuple, Dict
 import argparse
 from recglob import recglob
 from cleanupstr import cleanupstr
-import exif
+import our_exif
 import sys
 import os
 import time
@@ -45,7 +45,7 @@ def file_time_creation(f):
 
 
 def iminfo(filename: str) -> Dict[Any, Any]:
-    info = cleanup_exif_tags(exif.getexif(filename))
+    info = cleanup_exif_tags(our_exif.getexif(filename))
     if "DateTimeOriginal" in info:
         info["DateTime"] = info["DateTimeOriginal"]
     # if "DateTime" not in info:
@@ -118,8 +118,8 @@ def user_repr(v):
 def dump_exif(filename: str):
     print("File", filename, ":")
     try:
-        info = exif.getexif(filename)
-    except exif.ExifException as e:
+        info = our_exif.getexif(filename)
+    except our_exif.ExifException as e:
         print("  Error:", e)
     else:
         for k in sorted([k for k in info if isinstance(k, str)]) + sorted([k for k in info if not isinstance(k, str)]):
@@ -178,7 +178,7 @@ def collect_file(f: str, args):
                 errors[f] = os.path.basename(f) + " already has the prefix '" + base_prefix + "'"
         else:
             files[f] = newfn
-    except exif.ExifException as e:
+    except our_exif.ExifException as e:
         errors[f] = str(e)
 
 
