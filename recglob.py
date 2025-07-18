@@ -7,7 +7,7 @@ import glob
 import fnmatchex
 
 
-def recglob(filepattern: str, *, followlinks: bool = False):
+def recglob(filepattern: str, *, followlinks: bool = False, ignorecase: bool = False):
     """
     This function iterates ``dirname(filepattern) + "/**/" + basename(filepattern)``,
     where ``filepattern`` is matched via :func:`fnmatchex`.
@@ -16,6 +16,7 @@ def recglob(filepattern: str, *, followlinks: bool = False):
         (that is how it is different from :func:`glob`).
         Pattern expressions only supported for the basename yet.
     :param followlinks: if True, follow symbolic links to directories.
+    :param ignorecase: if True, ignore case when matching the basename of the file.
     :return: yields matching file names
     """
 
@@ -27,8 +28,8 @@ def recglob(filepattern: str, *, followlinks: bool = False):
         if not followlinks and os.path.islink(f) and os.path.isdir(f):
             continue
         if os.path.isdir(f):
-            for x in recglob(f + "/" + pattern, followlinks=followlinks):
+            for x in recglob(f + "/" + pattern, followlinks=followlinks, ignorecase=ignorecase):
                 yield x
         else:
-            if fnmatchex.fnmatchex(os.path.basename(f), pattern):
+            if fnmatchex.fnmatchex(os.path.basename(f), pattern, ignorecase=ignorecase):
                 yield f
