@@ -181,7 +181,7 @@ def collect_file(f, args):
 
 
 def collect_dir(dir, args):
-    for f in recglob(dir + "/*.{jpeg,jpg,JPG,mov,MOV,png,PNG}"):
+    for f in recglob(dir + "/*.{jpeg,jpg,JPG,mov,MOV,png,PNG,mp4,MP4,heic,HEIC}"):
         collect_file(f, args)
 
 
