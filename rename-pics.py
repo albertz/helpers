@@ -6,21 +6,25 @@
 
 
 import argparse
-from recglob import *
-from cleanupstr import *
-from pprint import pprint
+from recglob import recglob
+from cleanupstr import cleanupstr
 import exif
-import sys, os, time
+import sys
+import os
+import time
 from subprocess import check_call
 import better_exchook
+
 better_exchook.install()
 
 
 def cleanup_exif_tags(exif):
     ret = {}
     for tag, value in exif.items():
-        if type(tag) is int: continue
-        if tag == "MakerNote": continue
+        if type(tag) is int:
+            continue
+        if tag == "MakerNote":
+            continue
         if isinstance(value, (str, bytes)):
             value = cleanupstr(value).strip()
         ret[tag] = value
@@ -28,7 +32,9 @@ def cleanup_exif_tags(exif):
 
 
 def file_time_creation(f):
-    import os, time
+    import os
+    import time
+
     stats = os.stat(f)
     try:
         t = stats.st_birthtime
@@ -59,8 +65,10 @@ def user_input(text, convfunc):
 
 
 def str_to_bool(s):
-    if s.lower() in ["y", "yes", "ja", "j", "1"]: return True
-    if s.lower() in ["n", "no", "nein", "0"]: return False
+    if s.lower() in ["y", "yes", "ja", "j", "1"]:
+        return True
+    if s.lower() in ["n", "no", "nein", "0"]:
+        return False
     raise Exception("I don't understand %r; please give me an Y or N" % s)
 
 
@@ -102,7 +110,8 @@ def maybe_remove(s, content):
 
 def user_repr(v):
     if isinstance(v, str):
-        if len(v) > 30: return repr(v[:30]) + "..."
+        if len(v) > 30:
+            return repr(v[:30]) + "..."
         return repr(v)
     return repr(v)
 
@@ -162,7 +171,7 @@ def collect_file(f, args):
         newfn = dirname + "/" + prefix + "__" + basename + postfix + ext
         if os.path.exists(newfn):
             errors[f] = os.path.basename(newfn) + " already exists"
-        elif os.path.basename(f)[:len(base_prefix)] == base_prefix:
+        elif os.path.basename(f)[: len(base_prefix)] == base_prefix:
             if not args.ignore_prefixed:
                 errors[f] = os.path.basename(f) + " already has the prefix '" + base_prefix + "'"
         else:
@@ -258,31 +267,15 @@ def main():
         Asks for confirmation, so it is safe to just try out and see what it would do.
         """
     )
-    argparser.add_argument(
-        'dirs_or_files', nargs="+",
-        help="dirs/files to proceed")
-    argparser.add_argument(
-        '--add_time', action="store_true",
-        help="add time to filename")
-    argparser.add_argument(
-        '--add_prefix', type=str,
-        help="additional prefix to add")
-    argparser.add_argument(
-        '--add_postfix', type=str,
-        help="additional postfix to add")
-    argparser.add_argument(
-        '--show_exif_only', action="store_true",
-        help="show EXIF only and don't do anything")
-    argparser.add_argument(
-        '--ignore_prefixed', action="store_true",
-        help="don't rename already prefixed files")
-    argparser.add_argument(
-        "--utime", action="store_true", help="change ctime/mtime")
-    argparser.add_argument(
-        "--mtime", action="store_true", help="look at mtime")
-    argparser.add_argument(
-        '--no_action', action="store_true",
-        help="just try, don't do anything")
+    argparser.add_argument("dirs_or_files", nargs="+", help="dirs/files to proceed")
+    argparser.add_argument("--add_time", action="store_true", help="add time to filename")
+    argparser.add_argument("--add_prefix", type=str, help="additional prefix to add")
+    argparser.add_argument("--add_postfix", type=str, help="additional postfix to add")
+    argparser.add_argument("--show_exif_only", action="store_true", help="show EXIF only and don't do anything")
+    argparser.add_argument("--ignore_prefixed", action="store_true", help="don't rename already prefixed files")
+    argparser.add_argument("--utime", action="store_true", help="change ctime/mtime")
+    argparser.add_argument("--mtime", action="store_true", help="look at mtime")
+    argparser.add_argument("--no_action", action="store_true", help="just try, don't do anything")
     args = argparser.parse_args()
 
     for fn in args.dirs_or_files:
