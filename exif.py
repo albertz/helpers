@@ -31,10 +31,12 @@
 # ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
-import array, string, sys
+import array
+import string
+import sys
 
-II = b"II" # little-endian (intel-style)
-MM = b"MM" # big-endian (motorola-style)
+II = b"II"  # little-endian (intel-style)
+MM = b"MM"  # big-endian (motorola-style)
 
 try:
     if sys.byteorder == "little":
@@ -42,7 +44,7 @@ try:
     else:
         native_prefix = MM
 except AttributeError:
-    if ord(array.array("i",[1]).tostring()[0]):
+    if ord(array.array("i", [1]).tostring()[0]):
         native_prefix = II
     else:
         native_prefix = MM
@@ -51,7 +53,7 @@ except AttributeError:
 DEBUG = False
 
 
-SAFEBLOCK = 1024*1024
+SAFEBLOCK = 1024 * 1024
 
 ##
 # Reads large blocks in a safe way.  Unlike fp.read(n), this function
@@ -61,6 +63,7 @@ SAFEBLOCK = 1024*1024
 # @param fp File handle.  Must implement a <b>read</b> method.
 # @param size Number of bytes to read.
 # @return A string containing up to <i>size</i> bytes of data.
+
 
 def _safe_read(fp, size):
     if size <= 0:
@@ -81,24 +84,37 @@ def _safe_read(fp, size):
 # --------------------------------------------------------------------
 # Read TIFF files
 
-def il16(c,o=0):
-    return (c[o]) + ((c[o+1])<<8)
-def il32(c,o=0):
-    return (c[o]) + ((c[o+1])<<8) + ((c[o+2])<<16) + ((c[o+3])<<24)
+
+def il16(c, o=0):
+    return (c[o]) + ((c[o + 1]) << 8)
+
+
+def il32(c, o=0):
+    return (c[o]) + ((c[o + 1]) << 8) + ((c[o + 2]) << 16) + ((c[o + 3]) << 24)
+
+
 def ol16(i):
-    return chr(i&255) + chr(i>>8&255)
+    return chr(i & 255) + chr(i >> 8 & 255)
+
+
 def ol32(i):
-    return chr(i&255) + chr(i>>8&255) + chr(i>>16&255) + chr(i>>24&255)
+    return chr(i & 255) + chr(i >> 8 & 255) + chr(i >> 16 & 255) + chr(i >> 24 & 255)
 
-def ib16(c,o=0):
-    return (c[o+1]) + (c[o]<<8)
-def ib32(c,o=0):
-    return (c[o+3]) + ((c[o+2])<<8) + ((c[o+1])<<16) + ((c[o])<<24)
+
+def ib16(c, o=0):
+    return (c[o + 1]) + (c[o] << 8)
+
+
+def ib32(c, o=0):
+    return (c[o + 3]) + ((c[o + 2]) << 8) + ((c[o + 1]) << 16) + ((c[o]) << 24)
+
+
 def ob16(i):
-    return chr(i>>8&255) + chr(i&255)
-def ob32(i):
-    return chr(i>>24&255) + chr(i>>16&255) + chr(i>>8&255) + chr(i&255)
+    return chr(i >> 8 & 255) + chr(i & 255)
 
+
+def ob32(i):
+    return chr(i >> 24 & 255) + chr(i >> 16 & 255) + chr(i >> 8 & 255) + chr(i & 255)
 
 
 # a few tag names, just to make the code below a bit more readable
@@ -127,8 +143,8 @@ EXTRASAMPLES = 338
 SAMPLEFORMAT = 339
 JPEGTABLES = 347
 COPYRIGHT = 33432
-IPTC_NAA_CHUNK = 33723 # newsphoto properties
-PHOTOSHOP_CHUNK = 34377 # photoshop properties
+IPTC_NAA_CHUNK = 33723  # newsphoto properties
+PHOTOSHOP_CHUNK = 34377  # photoshop properties
 ICCPROFILE = 34675
 EXIFIFD = 34665
 XMP = 700
@@ -140,10 +156,10 @@ COMPRESSION_INFO = {
     3: "group3",
     4: "group4",
     5: "tiff_lzw",
-    6: "tiff_jpeg", # obsolete
+    6: "tiff_jpeg",  # obsolete
     7: "jpeg",
-    32771: "tiff_raw_16", # 16-bit padding
-    32773: "packbits"
+    32771: "tiff_raw_16",  # 16-bit padding
+    32773: "packbits",
 }
 
 OPEN_INFO = {
@@ -156,18 +172,18 @@ OPEN_INFO = {
     (II, 1, 1, 1, (1,), ()): ("1", "1"),
     (II, 1, 1, 2, (1,), ()): ("1", "1;R"),
     (II, 1, 1, 1, (8,), ()): ("L", "L"),
-    (II, 1, 1, 1, (8,8), (2,)): ("LA", "LA"),
+    (II, 1, 1, 1, (8, 8), (2,)): ("LA", "LA"),
     (II, 1, 1, 2, (8,), ()): ("L", "L;R"),
     (II, 1, 1, 1, (16,), ()): ("I;16", "I;16"),
     (II, 1, 2, 1, (16,), ()): ("I;16S", "I;16S"),
     (II, 1, 2, 1, (32,), ()): ("I", "I;32S"),
     (II, 1, 3, 1, (32,), ()): ("F", "F;32F"),
-    (II, 2, 1, 1, (8,8,8), ()): ("RGB", "RGB"),
-    (II, 2, 1, 2, (8,8,8), ()): ("RGB", "RGB;R"),
-    (II, 2, 1, 1, (8,8,8,8), (0,)): ("RGBX", "RGBX"),
-    (II, 2, 1, 1, (8,8,8,8), (1,)): ("RGBA", "RGBa"),
-    (II, 2, 1, 1, (8,8,8,8), (2,)): ("RGBA", "RGBA"),
-    (II, 2, 1, 1, (8,8,8,8), (999,)): ("RGBA", "RGBA"), # corel draw 10
+    (II, 2, 1, 1, (8, 8, 8), ()): ("RGB", "RGB"),
+    (II, 2, 1, 2, (8, 8, 8), ()): ("RGB", "RGB;R"),
+    (II, 2, 1, 1, (8, 8, 8, 8), (0,)): ("RGBX", "RGBX"),
+    (II, 2, 1, 1, (8, 8, 8, 8), (1,)): ("RGBA", "RGBa"),
+    (II, 2, 1, 1, (8, 8, 8, 8), (2,)): ("RGBA", "RGBA"),
+    (II, 2, 1, 1, (8, 8, 8, 8), (999,)): ("RGBA", "RGBA"),  # corel draw 10
     (II, 3, 1, 1, (1,), ()): ("P", "P;1"),
     (II, 3, 1, 2, (1,), ()): ("P", "P;1R"),
     (II, 3, 1, 1, (2,), ()): ("P", "P;2"),
@@ -175,12 +191,11 @@ OPEN_INFO = {
     (II, 3, 1, 1, (4,), ()): ("P", "P;4"),
     (II, 3, 1, 2, (4,), ()): ("P", "P;4R"),
     (II, 3, 1, 1, (8,), ()): ("P", "P"),
-    (II, 3, 1, 1, (8,8), (2,)): ("PA", "PA"),
+    (II, 3, 1, 1, (8, 8), (2,)): ("PA", "PA"),
     (II, 3, 1, 2, (8,), ()): ("P", "P;R"),
-    (II, 5, 1, 1, (8,8,8,8), ()): ("CMYK", "CMYK"),
-    (II, 6, 1, 1, (8,8,8), ()): ("YCbCr", "YCbCr"),
-    (II, 8, 1, 1, (8,8,8), ()): ("LAB", "LAB"),
-
+    (II, 5, 1, 1, (8, 8, 8, 8), ()): ("CMYK", "CMYK"),
+    (II, 6, 1, 1, (8, 8, 8), ()): ("YCbCr", "YCbCr"),
+    (II, 8, 1, 1, (8, 8, 8), ()): ("LAB", "LAB"),
     (MM, 0, 1, 1, (1,), ()): ("1", "1;I"),
     (MM, 0, 1, 2, (1,), ()): ("1", "1;IR"),
     (MM, 0, 1, 1, (8,), ()): ("L", "L;I"),
@@ -188,18 +203,18 @@ OPEN_INFO = {
     (MM, 1, 1, 1, (1,), ()): ("1", "1"),
     (MM, 1, 1, 2, (1,), ()): ("1", "1;R"),
     (MM, 1, 1, 1, (8,), ()): ("L", "L"),
-    (MM, 1, 1, 1, (8,8), (2,)): ("LA", "LA"),
+    (MM, 1, 1, 1, (8, 8), (2,)): ("LA", "LA"),
     (MM, 1, 1, 2, (8,), ()): ("L", "L;R"),
     (MM, 1, 1, 1, (16,), ()): ("I;16B", "I;16B"),
     (MM, 1, 2, 1, (16,), ()): ("I;16BS", "I;16BS"),
     (MM, 1, 2, 1, (32,), ()): ("I;32BS", "I;32BS"),
     (MM, 1, 3, 1, (32,), ()): ("F;32BF", "F;32BF"),
-    (MM, 2, 1, 1, (8,8,8), ()): ("RGB", "RGB"),
-    (MM, 2, 1, 2, (8,8,8), ()): ("RGB", "RGB;R"),
-    (MM, 2, 1, 1, (8,8,8,8), (0,)): ("RGBX", "RGBX"),
-    (MM, 2, 1, 1, (8,8,8,8), (1,)): ("RGBA", "RGBa"),
-    (MM, 2, 1, 1, (8,8,8,8), (2,)): ("RGBA", "RGBA"),
-    (MM, 2, 1, 1, (8,8,8,8), (999,)): ("RGBA", "RGBA"), # corel draw 10
+    (MM, 2, 1, 1, (8, 8, 8), ()): ("RGB", "RGB"),
+    (MM, 2, 1, 2, (8, 8, 8), ()): ("RGB", "RGB;R"),
+    (MM, 2, 1, 1, (8, 8, 8, 8), (0,)): ("RGBX", "RGBX"),
+    (MM, 2, 1, 1, (8, 8, 8, 8), (1,)): ("RGBA", "RGBa"),
+    (MM, 2, 1, 1, (8, 8, 8, 8), (2,)): ("RGBA", "RGBA"),
+    (MM, 2, 1, 1, (8, 8, 8, 8), (999,)): ("RGBA", "RGBA"),  # corel draw 10
     (MM, 3, 1, 1, (1,), ()): ("P", "P;1"),
     (MM, 3, 1, 2, (1,), ()): ("P", "P;1R"),
     (MM, 3, 1, 1, (2,), ()): ("P", "P;2"),
@@ -207,26 +222,25 @@ OPEN_INFO = {
     (MM, 3, 1, 1, (4,), ()): ("P", "P;4"),
     (MM, 3, 1, 2, (4,), ()): ("P", "P;4R"),
     (MM, 3, 1, 1, (8,), ()): ("P", "P"),
-    (MM, 3, 1, 1, (8,8), (2,)): ("PA", "PA"),
+    (MM, 3, 1, 1, (8, 8), (2,)): ("PA", "PA"),
     (MM, 3, 1, 2, (8,), ()): ("P", "P;R"),
-    (MM, 5, 1, 1, (8,8,8,8), ()): ("CMYK", "CMYK"),
-    (MM, 6, 1, 1, (8,8,8), ()): ("YCbCr", "YCbCr"),
-    (MM, 8, 1, 1, (8,8,8), ()): ("LAB", "LAB"),
-
+    (MM, 5, 1, 1, (8, 8, 8, 8), ()): ("CMYK", "CMYK"),
+    (MM, 6, 1, 1, (8, 8, 8), ()): ("YCbCr", "YCbCr"),
+    (MM, 8, 1, 1, (8, 8, 8), ()): ("LAB", "LAB"),
 }
 
-PREFIXES = ["MM\000\052", "II\052\000", "II\xBC\000"]
+PREFIXES = ["MM\000\052", "II\052\000", "II\xbc\000"]
+
 
 def _accept(prefix):
     return prefix[:4] in PREFIXES
 
 
-
 ##
 # Wrapper for TIFF IFDs.
 
-class TiffImageFileDirectory:
 
+class TiffImageFileDirectory:
     # represents a TIFF tag directory.  to speed things up,
     # we don't decode tags unless they're asked for.
 
@@ -245,7 +259,7 @@ class TiffImageFileDirectory:
     def reset(self):
         self.tags = {}
         self.tagdata = {}
-        self.tagtype = {} # added 2008-06-05 by Florian Hoech
+        self.tagtype = {}  # added 2008-06-05 by Florian Hoech
         self.next = None
 
     # dictionary API (sort of)
@@ -266,7 +280,7 @@ class TiffImageFileDirectory:
         try:
             return self.tags[tag]
         except KeyError:
-            type, data = self.tagdata[tag] # unpack on the fly
+            type, data = self.tagdata[tag]  # unpack on the fly
             size, handler = self.load_dispatch[type]
             self.tags[tag] = data = handler(self, data)
             del self.tagdata[tag]
@@ -285,7 +299,7 @@ class TiffImageFileDirectory:
                 if tag == SAMPLEFORMAT:
                     # work around broken (?) matrox library
                     # (from Ted Wright, via Bob Klimek)
-                    raise KeyError() # use default
+                    raise KeyError()  # use default
                 raise ValueError("not a scalar")
             return value[0]
         except KeyError:
@@ -310,12 +324,14 @@ class TiffImageFileDirectory:
         for i in range(len(data)):
             l.append((data[i]))
         return tuple(l)
+
     load_dispatch[1] = (1, load_byte)
 
     def load_string(self, data):
-        if data[-1:] == '\0':
+        if data[-1:] == "\0":
             data = data[:-1]
         return data
+
     load_dispatch[2] = (1, load_string)
 
     def load_short(self, data):
@@ -323,6 +339,7 @@ class TiffImageFileDirectory:
         for i in range(0, len(data), 2):
             l.append(self.i16(data, i))
         return tuple(l)
+
     load_dispatch[3] = (2, load_short)
 
     def load_long(self, data):
@@ -330,13 +347,15 @@ class TiffImageFileDirectory:
         for i in range(0, len(data), 4):
             l.append(self.i32(data, i))
         return tuple(l)
+
     load_dispatch[4] = (4, load_long)
 
     def load_rational(self, data):
         l = []
         for i in range(0, len(data), 8):
-            l.append((self.i32(data, i), self.i32(data, i+4)))
+            l.append((self.i32(data, i), self.i32(data, i + 4)))
         return tuple(l)
+
     load_dispatch[5] = (8, load_rational)
 
     def load_float(self, data):
@@ -344,6 +363,7 @@ class TiffImageFileDirectory:
         if self.prefix != native_prefix:
             a.byteswap()
         return tuple(a)
+
     load_dispatch[11] = (4, load_float)
 
     def load_double(self, data):
@@ -351,11 +371,13 @@ class TiffImageFileDirectory:
         if self.prefix != native_prefix:
             a.byteswap()
         return tuple(a)
+
     load_dispatch[12] = (8, load_double)
 
     def load_undefined(self, data):
         # Untyped data
         return data
+
     load_dispatch[7] = (1, load_undefined)
 
     def load(self, fp):
@@ -367,24 +389,28 @@ class TiffImageFileDirectory:
         i32 = self.i32
 
         for i in range(i16(fp.read(2))):
-
             ifd = fp.read(12)
 
             tag, typ = i16(ifd), i16(ifd, 2)
 
             if DEBUG:
                 import TiffTags
+
                 tagname = TiffTags.TAGS.get(tag, "unknown")
                 typname = TiffTags.TYPES.get(typ, "unknown")
-                print("tag: %s (%d)" % (tagname, tag),)
-                print("- type: %s (%d)" % (typname, typ),)
+                print(
+                    "tag: %s (%d)" % (tagname, tag),
+                )
+                print(
+                    "- type: %s (%d)" % (typname, typ),
+                )
 
             try:
                 dispatch = self.load_dispatch[typ]
             except KeyError:
                 if DEBUG:
                     print("- unsupported type", typ)
-                continue # ignore unsupported type
+                continue  # ignore unsupported type
 
             size, handler = dispatch
 
@@ -397,13 +423,13 @@ class TiffImageFileDirectory:
                 data = _safe_read(fp, size)
                 fp.seek(here)
             else:
-                data = ifd[8:8+size]
+                data = ifd[8 : 8 + size]
 
             if len(data) != size:
-                #raise IOError, "not enough data"
+                # raise IOError, "not enough data"
                 # don't raise an exception, just stop reading
                 break
-				
+
             self.tagdata[tag] = typ, data
             self.tagtype[tag] = typ
 
@@ -418,7 +444,6 @@ class TiffImageFileDirectory:
     # save primitives
 
     def save(self, fp):
-
         o16 = self.o16
         o32 = self.o32
 
@@ -436,7 +461,6 @@ class TiffImageFileDirectory:
 
         # pass 1: convert tags to binary format
         for tag, value in tags:
-
             typ = None
 
             if tag in self.tagtype:
@@ -456,7 +480,7 @@ class TiffImageFileDirectory:
                 # integer data
                 if tag == STRIPOFFSETS:
                     stripoffsets = len(directory)
-                    typ = 4 # to avoid catch-22
+                    typ = 4  # to avoid catch-22
                 elif tag in (X_RESOLUTION, Y_RESOLUTION):
                     # identify rational data fields
                     typ = 5
@@ -472,10 +496,15 @@ class TiffImageFileDirectory:
 
             if DEBUG:
                 import TiffTags
+
                 tagname = TiffTags.TAGS.get(tag, "unknown")
                 typname = TiffTags.TYPES.get(typ, "unknown")
-                print("save: %s (%d)" % (tagname, tag),)
-                print("- type: %s (%d)" % (typname, typ),)
+                print(
+                    "save: %s (%d)" % (tagname, tag),
+                )
+                print(
+                    "- type: %s (%d)" % (typname, typ),
+                )
                 if tag in (COLORMAP, IPTC_NAA_CHUNK, PHOTOSHOP_CHUNK, ICCPROFILE, XMP):
                     size = len(data)
                     print("- value: <table: %d bytes>" % size)
@@ -486,15 +515,15 @@ class TiffImageFileDirectory:
             if len(data) == 4:
                 append((tag, typ, len(value), data, ""))
             elif len(data) < 4:
-                append((tag, typ, len(value), data + (4-len(data))*"\0", ""))
+                append((tag, typ, len(value), data + (4 - len(data)) * "\0", ""))
             else:
                 count = len(value)
                 if typ == 5:
-                    count = count / 2        # adjust for rational data field
+                    count = count / 2  # adjust for rational data field
                 append((tag, typ, count, o32(offset), data))
                 offset = offset + len(data)
                 if offset & 1:
-                    offset = offset + 1 # word padding
+                    offset = offset + 1  # word padding
 
         # update strip offset data to point beyond auxiliary data
         if stripoffsets is not None:
@@ -510,7 +539,7 @@ class TiffImageFileDirectory:
             fp.write(o16(tag) + o16(typ) + o32(count) + value)
 
         # -- overwrite here for multi-page --
-        fp.write("\0\0\0\0") # end of directory
+        fp.write("\0\0\0\0")  # end of directory
 
         # pass 3: write auxiliary data to file
         for tag, typ, count, value, data in directory:
@@ -519,7 +548,6 @@ class TiffImageFileDirectory:
                 fp.write("\0")
 
         return offset
-
 
 
 ##
@@ -531,34 +559,33 @@ class TiffImageFileDirectory:
 # Maps EXIF tags to tag names.
 
 TAGS = {
-
     # possibly incomplete
     0x0100: "ImageWidth",
     0x0101: "ImageLength",
     0x0102: "BitsPerSample",
     0x0103: "Compression",
     0x0106: "PhotometricInterpretation",
-    0x010e: "ImageDescription",
-    0x010f: "Make",
+    0x010E: "ImageDescription",
+    0x010F: "Make",
     0x0110: "Model",
     0x0111: "StripOffsets",
     0x0112: "Orientation",
     0x0115: "SamplesPerPixel",
     0x0116: "RowsPerStrip",
     0x0117: "StripByteConunts",
-    0x011a: "XResolution",
-    0x011a: "XResolution",
-    0x011b: "YResolution",
-    0x011b: "YResolution",
-    0x011c: "PlanarConfiguration",
+    0x011A: "XResolution",
+    0x011A: "XResolution",
+    0x011B: "YResolution",
+    0x011B: "YResolution",
+    0x011C: "PlanarConfiguration",
     0x0128: "ResolutionUnit",
     0x0128: "ResolutionUnit",
-    0x012d: "TransferFunction",
+    0x012D: "TransferFunction",
     0x0131: "Software",
     0x0132: "DateTime",
-    0x013b: "Artist",
-    0x013e: "WhitePoint",
-    0x013f: "PrimaryChromaticities",
+    0x013B: "Artist",
+    0x013E: "WhitePoint",
+    0x013F: "PrimaryChromaticities",
     0x0201: "JpegIFOffset",
     0x0202: "JpegIFByteCount",
     0x0211: "YCbCrCoefficients",
@@ -571,12 +598,12 @@ TAGS = {
     0x1000: "RelatedImageFileFormat",
     0x1001: "RelatedImageLength",
     0x1001: "RelatedImageWidth",
-    0x828d: "CFARepeatPatternDim",
-    0x828e: "CFAPattern",
-    0x828f: "BatteryLevel",
+    0x828D: "CFARepeatPatternDim",
+    0x828E: "CFAPattern",
+    0x828F: "BatteryLevel",
     0x8298: "Copyright",
-    0x829a: "ExposureTime",
-    0x829d: "FNumber",
+    0x829A: "ExposureTime",
+    0x829D: "FNumber",
     0x8769: "ExifOffset",
     0x8773: "InterColorProfile",
     0x8822: "ExposureProgram",
@@ -585,8 +612,8 @@ TAGS = {
     0x8827: "ISOSpeedRatings",
     0x8828: "OECF",
     0x8829: "Interlace",
-    0x882a: "TimeZoneOffset",
-    0x882b: "SelfTimerMode",
+    0x882A: "TimeZoneOffset",
+    0x882B: "SelfTimerMode",
     0x9000: "ExifVersion",
     0x9003: "DateTimeOriginal",
     0x9004: "DateTimeDigitized",
@@ -601,39 +628,38 @@ TAGS = {
     0x9207: "MeteringMode",
     0x9208: "LightSource",
     0x9209: "Flash",
-    0x920a: "FocalLength",
-    0x920b: "FlashEnergy",
-    0x920c: "SpatialFrequencyResponse",
-    0x920d: "Noise",
+    0x920A: "FocalLength",
+    0x920B: "FlashEnergy",
+    0x920C: "SpatialFrequencyResponse",
+    0x920D: "Noise",
     0x9211: "ImageNumber",
     0x9212: "SecurityClassification",
     0x9213: "ImageHistory",
     0x9214: "SubjectLocation",
     0x9215: "ExposureIndex",
     0x9216: "TIFF/EPStandardID",
-    0x927c: "MakerNote",
+    0x927C: "MakerNote",
     0x9286: "UserComment",
     0x9290: "SubsecTime",
     0x9291: "SubsecTimeOriginal",
     0x9292: "SubsecTimeDigitized",
-    0xa000: "FlashPixVersion",
-    0xa001: "ColorSpace",
-    0xa002: "ExifImageWidth",
-    0xa003: "ExifImageHeight",
-    0xa004: "RelatedSoundFile",
-    0xa005: "ExifInteroperabilityOffset",
-    0xa20b: "FlashEnergy",
-    0xa20c: "SpatialFrequencyResponse",
-    0xa20e: "FocalPlaneXResolution",
-    0xa20f: "FocalPlaneYResolution",
-    0xa210: "FocalPlaneResolutionUnit",
-    0xa214: "SubjectLocation",
-    0xa215: "ExposureIndex",
-    0xa217: "SensingMethod",
-    0xa300: "FileSource",
-    0xa301: "SceneType",
-    0xa302: "CFAPattern",
-
+    0xA000: "FlashPixVersion",
+    0xA001: "ColorSpace",
+    0xA002: "ExifImageWidth",
+    0xA003: "ExifImageHeight",
+    0xA004: "RelatedSoundFile",
+    0xA005: "ExifInteroperabilityOffset",
+    0xA20B: "FlashEnergy",
+    0xA20C: "SpatialFrequencyResponse",
+    0xA20E: "FocalPlaneXResolution",
+    0xA20F: "FocalPlaneYResolution",
+    0xA210: "FocalPlaneResolutionUnit",
+    0xA214: "SubjectLocation",
+    0xA215: "ExposureIndex",
+    0xA217: "SensingMethod",
+    0xA300: "FileSource",
+    0xA301: "SceneType",
+    0xA302: "CFAPattern",
 }
 
 ##
@@ -666,11 +692,13 @@ GPSTAGS = {
     23: "GPSDestBearingRef",
     24: "GPSDestBearing",
     25: "GPSDestDistanceRef",
-    26: "GPSDestDistance"
+    26: "GPSDestDistance",
 }
 
 
-class ExifException(Exception): pass
+class ExifException(Exception):
+    pass
+
 
 def getexif(im):
     # Extract EXIF information.  This method is highly experimental,
@@ -680,8 +708,10 @@ def getexif(im):
     data = None
 
     import os
+
     if type(im) == str and os.path.isfile(im):
         from PIL import Image
+
         try:
             im = Image.open(im)
         except Exception as e:
@@ -691,13 +721,13 @@ def getexif(im):
         # this works if im is an image loaded by PIL
         data = im.info["exif"]
     except KeyError:
-        return {} # it meens there is no Exif entry
+        return {}  # it meens there is no Exif entry
     except:
         try:
             # maybe this is the info-dict of an image loaded by PIL
             data = im["exif"]
         except KeyError:
-            return {} # it meens there is no Exif entry
+            return {}  # it meens there is no Exif entry
         except:
             # let's asume that im is Exif itself
             data = im
@@ -707,9 +737,10 @@ def getexif(im):
 
     if data[0:6] != b"Exif\x00\x00":
         raise Exception("no exif data: " + repr(data[0:6]))
-        #return None # no exif-data
+        # return None # no exif-data
 
     import io
+
     def fixup(value):
         if len(value) == 1:
             return value[0]
