@@ -44,10 +44,7 @@ def file_time_creation(f):
 
 
 def iminfo(f):
-    try:
-        info = cleanup_exif_tags(exif.getexif(f))
-    except exif.ExifException:
-        info = {}
+    info = cleanup_exif_tags(exif.getexif(f))
     if "DateTimeOriginal" in info:
         info["DateTime"] = info["DateTimeOriginal"]
     if "DateTime" not in info:
