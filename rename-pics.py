@@ -142,6 +142,9 @@ def collect_file(f, args):
     try:
         assert os.path.isfile(f), "is not a file: %s" % f
         date_prefix, time_prefix = get_prefix_for_file(f, args)
+        if not date_prefix or not time_prefix:
+            errors[f] = "no date/time in EXIF"
+            return
         if args.utime:
             if args.mtime:
                 file_ctime = file_mtime_underscore(f)
