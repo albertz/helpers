@@ -7,23 +7,28 @@ import glob
 import fnmatchex
 
 
-def recglob(filepattern, *, followlinks=False):
+def recglob(filepattern: str, *, followlinks: bool = False):
     """
-    usage: filepattern = dir + "/" + pattern
-    filepattern: fnmatchex expr only supported for the basename yet
-    this function iterates: dir + "/**/" + pattern
+    This function iterates ``dirname(filepattern) + "/**/" + basename(filepattern)``,
+    where ``filepattern`` is matched via :func:`fnmatchex`.
+
+    :param filepattern: "{dir}/{pattern}". :func:`fnmatchex` is used for ``pattern``
+        (that is how it is different from :func:`glob`).
+        Pattern expressions only supported for the basename yet.
+    :param followlinks: if True, follow symbolic links to directories.
+    :return: yields matching file names
     """
 
     dir = os.path.dirname(filepattern)
-    filepattern = os.path.basename(filepattern)
+    pattern = os.path.basename(filepattern)
 
     # use iglob instead of listdir to get a lazy list
     for f in glob.iglob(dir + "/*"):
         if not followlinks and os.path.islink(f) and os.path.isdir(f):
             continue
         if os.path.isdir(f):
-            for x in recglob(f + "/" + filepattern, followlinks=followlinks):
+            for x in recglob(f + "/" + pattern, followlinks=followlinks):
                 yield x
         else:
-            if fnmatchex.fnmatchex(os.path.basename(f), filepattern):
+            if fnmatchex.fnmatchex(os.path.basename(f), pattern):
                 yield f
