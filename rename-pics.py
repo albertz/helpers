@@ -47,8 +47,8 @@ def iminfo(f):
     info = cleanup_exif_tags(exif.getexif(f))
     if "DateTimeOriginal" in info:
         info["DateTime"] = info["DateTimeOriginal"]
-    if "DateTime" not in info:
-        info["DateTime"] = file_time_creation(f)
+    # if "DateTime" not in info:
+    #    info["DateTime"] = file_time_creation(f)  # -- not sure...
     return info
 
 
