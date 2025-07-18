@@ -9,7 +9,8 @@ from typing import Optional, Any, Tuple, Dict
 import argparse
 from recglob import recglob
 from cleanupstr import cleanupstr
-import our_exif
+import exiftool
+from exiftool.exceptions import ExifToolException as ExifException
 import sys
 import os
 import time
@@ -45,9 +46,11 @@ def file_time_creation(f):
 
 
 def iminfo(filename: str) -> Dict[Any, Any]:
-    info = cleanup_exif_tags(our_exif.getexif(filename))
+    info = cleanup_exif_tags(getexif(filename))
     if "DateTimeOriginal" in info:
         info["DateTime"] = info["DateTimeOriginal"]
+    if not info.get("DateTime") and info.get("QuickTime:CreateDate"):
+        info["DateTime"] = info["QuickTime:CreateDate"]
     # if "DateTime" not in info:
     #    info["DateTime"] = file_time_creation(f)  # -- not sure...
     return info
@@ -115,11 +118,27 @@ def user_repr(v):
     return repr(v)
 
 
+_exif_tool_helper = exiftool.ExifToolHelper()
+
+
+def getexif(filename: str) -> Dict[Any, Any]:
+    # Python exif and piexif cannot handle MP4.
+    # exiftool wraps the cmd line tool, and seems to handle all formats.
+    metadata = _exif_tool_helper.get_metadata(filename)
+    res = {}
+    for data in metadata:
+        res.update(data)
+    for k, v in list(res.items()):
+        if isinstance(k, str) and k.startswith("EXIF:"):
+            res[k[len("EXIF:") :]] = v
+    return res
+
+
 def dump_exif(filename: str):
     print("File", filename, ":")
     try:
-        info = our_exif.getexif(filename)
-    except our_exif.ExifException as e:
+        info = getexif(filename)
+    except ExifException as e:
         print("  Error:", e)
     else:
         for k in sorted([k for k in info if isinstance(k, str)]) + sorted([k for k in info if not isinstance(k, str)]):
@@ -146,6 +165,9 @@ def collect_file(f: str, args):
         date_prefix, time_prefix = get_prefix_for_file(f)
         if not date_prefix or not time_prefix:
             errors[f] = "no date/time in EXIF"
+            return
+        if date_prefix.startswith("0000_"):
+            errors[f] = f"invalid date/time in EXIF ({date_prefix} {time_prefix})"
             return
         if args.utime:
             if args.mtime:
@@ -178,7 +200,7 @@ def collect_file(f: str, args):
                 errors[f] = os.path.basename(f) + " already has the prefix '" + base_prefix + "'"
         else:
             files[f] = newfn
-    except our_exif.ExifException as e:
+    except ExifException as e:
         errors[f] = str(e)
 
 
