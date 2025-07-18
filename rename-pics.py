@@ -5,6 +5,7 @@
 # code under zlib
 
 
+from typing import Optional, Any, Tuple, Dict
 import argparse
 from recglob import recglob
 from cleanupstr import cleanupstr
@@ -18,10 +19,10 @@ import better_exchook
 better_exchook.install()
 
 
-def cleanup_exif_tags(exif):
+def cleanup_exif_tags(exif: Dict[Any, Any]) -> Dict[Any, Any]:
     ret = {}
     for tag, value in exif.items():
-        if type(tag) is int:
+        if isinstance(tag, int):
             continue
         if tag == "MakerNote":
             continue
@@ -43,8 +44,8 @@ def file_time_creation(f):
     return time.strftime("%Y:%m:%d %H:%M:%S", time.localtime(t))
 
 
-def iminfo(f):
-    info = cleanup_exif_tags(exif.getexif(f))
+def iminfo(filename: str) -> Dict[Any, Any]:
+    info = cleanup_exif_tags(exif.getexif(filename))
     if "DateTimeOriginal" in info:
         info["DateTime"] = info["DateTimeOriginal"]
     # if "DateTime" not in info:
@@ -74,16 +75,17 @@ files_utime = {}
 errors = {}
 
 
-def get_prefix_for_file(f, args):
+def get_prefix_for_file(filename: str) -> Tuple[Optional[str], Optional[str]]:
     """
-
     Args:
-        f (str):
+        filename (str):
 
     Returns:
-        (str, str):
+        (str, str): date prefix, time prefix
     """
-    info = iminfo(f)
+    info = iminfo(filename)
+    if not info.get("DateTime"):
+        return None, None
     date_time_str = info["DateTime"].replace(":", "_").replace(" ", "_")
     # prefix, eg. "2011_01_22", and time
     return date_time_str[:10], date_time_str[11:19]
@@ -113,16 +115,16 @@ def user_repr(v):
     return repr(v)
 
 
-def dump_exif(f):
-    print("File", f, ":")
+def dump_exif(filename: str):
+    print("File", filename, ":")
     try:
-        info = exif.getexif(f)
+        info = exif.getexif(filename)
     except exif.ExifException as e:
         print("  Error:", e)
     else:
         for k in sorted([k for k in info if isinstance(k, str)]) + sorted([k for k in info if not isinstance(k, str)]):
             print(" ", k, ":", user_repr(info[k]))
-    print("  file creation time:", file_time_creation(f))
+    print("  file creation time:", file_time_creation(filename))
 
 
 def file_ctime_underscore(f):
@@ -134,14 +136,14 @@ def file_mtime_underscore(f):
     return time.strftime("%Y_%m_%d %H_%M_%S", time.localtime(t))
 
 
-def collect_file(f, args):
+def collect_file(f: str, args):
     if args.show_exif_only:
         dump_exif(f)
         return
     global files, files_utime, errors
     try:
         assert os.path.isfile(f), "is not a file: %s" % f
-        date_prefix, time_prefix = get_prefix_for_file(f, args)
+        date_prefix, time_prefix = get_prefix_for_file(f)
         if not date_prefix or not time_prefix:
             errors[f] = "no date/time in EXIF"
             return
@@ -180,7 +182,7 @@ def collect_file(f, args):
         errors[f] = str(e)
 
 
-def collect_dir(dir, args):
+def collect_dir(dir: str, args):
     for f in recglob(dir + "/*.{jpeg,jpg,mov,png,mp4,heic}", ignorecase=True):
         collect_file(f, args)
 
@@ -205,7 +207,7 @@ def change_ctime(f, new_time):
     os.utime(f, (tsecs, tsecs))
 
 
-def collect(fn, args):
+def collect(fn: str, args):
     if os.path.isdir(fn):
         return collect_dir(fn, args)
     if os.path.isfile(fn):

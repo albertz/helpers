@@ -244,7 +244,7 @@ class TiffImageFileDirectory:
     # represents a TIFF tag directory.  to speed things up,
     # we don't decode tags unless they're asked for.
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: bytes):
         self.prefix = prefix[:2]
         if self.prefix == MM:
             self.i16, self.i32 = ib16, ib32
@@ -702,7 +702,7 @@ def getexif(im):
 
     import os
 
-    if type(im) == str and os.path.isfile(im):
+    if isinstance(im, str) and os.path.isfile(im):
         from PIL import Image
 
         try:
@@ -714,16 +714,7 @@ def getexif(im):
         # this works if im is an image loaded by PIL
         data = im.info["exif"]
     except KeyError:
-        return {}  # it meens there is no Exif entry
-    except:
-        try:
-            # maybe this is the info-dict of an image loaded by PIL
-            data = im["exif"]
-        except KeyError:
-            return {}  # it meens there is no Exif entry
-        except:
-            # let's asume that im is Exif itself
-            data = im
+        raise ExifException("no EXIF data found")
 
     if not isinstance(data, (str, bytes)):
         raise Exception("expecting an image, an info-dict or Exif data but got %s" % type(data))
