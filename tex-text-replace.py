@@ -53,32 +53,42 @@ def replace(text: str, pattern: str, replacement: str) -> str:
         "date",
     }
 
-    # Regex to match LaTeX commands
-    command_regex = re.compile(r"\\([a-zA-Z]+)\b(\[[^]]*\])?(\s*\{([^{}]*)\})?")
+    # Regex to match LaTeX commands or comments
+    # Group 1: command, Group 8: comment
+    token_regex = re.compile(
+        r"(\\([a-zA-Z]+)\b(\[[^]]*\])?(\s*\{([^{}]*)\})?)"  # Command
+        r"|((?<!\\)%.*)"  # Comment
+    )
 
-    # Split the text into parts: text and LaTeX commands
+    # Split the text into parts: text, LaTeX commands, and comments
     parts = []
     last_end = 0
-    for match in command_regex.finditer(text):
+    for match in token_regex.finditer(text):
         start, end = match.span()
         if last_end < start:
             parts.append(("text", None, text[last_end:start]))
-        parts.append(("command", match, text[start:end]))
+        if match.group(1):  # Command
+            parts.append(("command", match, text[start:end]))
+        elif match.group(6):  # Comment
+            parts.append(("comment", match, text[start:end]))
+        else:
+            raise ValueError("Unexpected match in regex.")
         last_end = end
     if last_end < len(text):
         parts.append(("text", None, text[last_end:]))
 
     # Process each part
     new_parts = []
-    for part_type, match, part_text in parts:
+    for part_type, match_obj, part_text in parts:
         if part_type == "text":
             new_part_text = re.sub(pattern, replacement, part_text)
             new_parts.append(new_part_text)
-        elif part_type == "command" and match.group(1) in allowed_commands and match.group(3):
-            command_name = match.group(1)
-            optional_arg = match.group(2) or ""
-            arg = match.group(4)
+        elif part_type == "command" and match_obj.group(2) in allowed_commands and match_obj.group(4):
+            command_name = match_obj.group(2)
+            optional_arg = match_obj.group(3) or ""
+            arg = match_obj.group(5)
             new_arg = re.sub(pattern, replacement, arg)
+            # group(4) contains the whitespace and braces
             new_command = f"\\{command_name}{optional_arg}{{{new_arg}}}"
             new_parts.append(new_command)
         else:
